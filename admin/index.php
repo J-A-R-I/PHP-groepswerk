@@ -32,10 +32,10 @@ if (str_starts_with($uri, ADMIN_BASE_PATH)) {
 $uri = rtrim($uri, '/') ?: '/';
 
 
-$publicRoutes = ['/']; // /login
+$publicRoutes = ['/login'];
 
 if (!Auth::check() && !in_array($uri, $publicRoutes, true)) {
-    header('Location: ' . ADMIN_BASE_PATH . '/');
+    header('Location: ' . ADMIN_BASE_PATH . '/login');
     exit;
 }
 
