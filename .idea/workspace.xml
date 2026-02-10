@@ -4,7 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5ed2aeed-286f-455f-a5f0-88d095215576" name="Changes" comment="" />
+    <list default="true" id="5ed2aeed-286f-455f-a5f0-88d095215576" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin/classes/Admin/Controllers/AuthController.php" beforeDir="false" afterPath="$PROJECT_DIR$/admin/classes/Admin/Controllers/AuthController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin/classes/Admin/Controllers/UsersController.php" beforeDir="false" afterPath="$PROJECT_DIR$/admin/classes/Admin/Controllers/UsersController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin/classes/Admin/Repositories/UsersRepository.php" beforeDir="false" afterPath="$PROJECT_DIR$/admin/classes/Admin/Repositories/UsersRepository.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/admin/index.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin/views/errors/403.php" beforeDir="false" afterPath="$PROJECT_DIR$/admin/views/errors/403.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/public/index.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/uploads/f248292dc2f1ddb994832b22b0d4d6c7.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/views/layouts/public.php" beforeDir="false" afterPath="$PROJECT_DIR$/public/views/layouts/public.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/views/partials/nav.php" beforeDir="false" afterPath="$PROJECT_DIR$/public/views/partials/nav.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/views/posts/home.php" beforeDir="false" afterPath="$PROJECT_DIR$/public/views/posts/home.php" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -43,27 +55,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;autoload&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/wamp64/www/PHP-groepswerk&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "frontend",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "C:/wamp64/www/PHP-groepswerk",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\wamp64\www\php-groepswerk" />
@@ -89,6 +101,7 @@
       <workItem from="1770675066653" duration="908000" />
       <workItem from="1770676466722" duration="453000" />
       <workItem from="1770676925454" duration="1204000" />
+      <workItem from="1770738776683" duration="3826000" />
     </task>
     <servers />
   </component>

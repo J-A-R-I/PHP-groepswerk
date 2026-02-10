@@ -15,79 +15,153 @@ class UsersRepository
         $this->pdo = $pdo;
     }
 
+    /**
+     * getAll()
+     * Doel: admin-overzicht van alle users + rolnaam.
+     */
+    public function getAll(): array
+    {
+        $sql = "SELECT u.id, u.email, u.name, u.is_active, r.name AS role_name
+                FROM users u
+                JOIN roles r ON r.id = u.role_id
+                ORDER BY u.id ASC";
+
+        return $this->pdo->query($sql)->fetchAll();
+    }
+
+    /**
+     * findByEmail()
+     * Doel: login alleen voor actieve users.
+     */
+    public function findByEmail(string $email): ?array
+    {
+        $sql = "SELECT u.id, u.email, u.password_hash, u.name, u.is_active, r.name AS role_name
+                FROM users u
+                JOIN roles r ON r.id = u.role_id
+                WHERE u.email = :email
+                AND u.is_active = 1
+                LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['email' => $email]);
+
+        $user = $stmt->fetch();
+
+        return $user === false ? null : $user;
+    }
+
+    /**
+     * create()
+     * Doel: nieuwe user aanmaken met hash en default actief.
+     */
+    public function create(string $email, string $name, string $plainPassword, int $roleId): void
+    {
+        $sql = "INSERT INTO users (email, name, password_hash, role_id, is_active)
+                VALUES (:email, :name, :hash, :role_id, 1)";
+
+        $hash = password_hash($plainPassword, PASSWORD_DEFAULT);
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'email' => $email,
+            'name' => $name,
+            'hash' => $hash,
+            'role_id' => $roleId,
+        ]);
+    }
+
+    /**
+     * findById()
+     * Doel: user ophalen voor edit-form, inclusief role_id.
+     */
+    public function findById(int $id): ?array
+    {
+        $sql = "SELECT u.id, u.email, u.name, u.role_id, u.is_active, r.name AS role_name
+                FROM users u
+                JOIN roles r ON r.id = u.role_id
+                WHERE u.id = :id
+                LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id' => $id]);
+
+        $user = $stmt->fetch();
+
+        return $user === false ? null : $user;
+    }
+
+    /**
+     * update()
+     * Doel: naam + rol wijzigen.
+     */
+    public function update(int $id, string $name, int $roleId): void
+    {
+        $sql = "UPDATE users
+                SET name = :name,
+                    role_id = :role_id
+                WHERE id = :id
+                LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'id' => $id,
+            'name' => $name,
+            'role_id' => $roleId,
+        ]);
+    }
+
+    /**
+     * updatePassword()
+     * Doel: wachtwoord resetten (hash vervangen).
+     */
+    public function updatePassword(int $id, string $plainPassword): void
+    {
+        $sql = "UPDATE users
+                SET password_hash = :hash
+                WHERE id = :id
+                LIMIT 1";
+
+        $hash = password_hash($plainPassword, PASSWORD_DEFAULT);
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'id' => $id,
+            'hash' => $hash,
+        ]);
+    }
+
+    /**
+     * disable()
+     * Doel: user blokkeren.
+     */
+    public function disable(int $id): void
+    {
+        $sql = "UPDATE users
+                SET is_active = 0
+                WHERE id = :id
+                LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id' => $id]);
+    }
+
+    /**
+     * enable()
+     * Doel: user deblokkeren.
+     */
+    public function enable(int $id): void
+    {
+        $sql = "UPDATE users
+                SET is_active = 1
+                WHERE id = :id
+                LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id' => $id]);
+    }
+
     public static function make(): self
     {
         return new self(Database::getConnection());
     }
-
-    // MOCK DATA: Hardcoded admin user
-    private function getMockUser(): array
-    {
-        return [
-            'id' => 1,
-            'email' => 'admin@syntra.be',
-            // Hash voor 'admin123'
-            'password_hash' => '$2y$10$8.hw7/W./.k/..9/..9/.9/.9/.9/.9/.9/.9/.9/.9/.9',
-            // Correcte hash voor admin123 (gegenereerd):
-            'password_hash' => '$2y$10$CwTycUXWue0Thq9StjUM0uJ.pYlqM.uL.uL.uL.uL.uL.uL.uL.',
-            // Wacht, laten we een echte werkende hash gebruiken:
-            // admin123 -> $2y$10$r/w1j.1j.1j.1j.1j.1j.1j.1j.1j.1j.1j.1j.1j.1j.1j.1j
-            // Om zeker te zijn gebruiken we password_verify logic in de controller,
-            // dus hier moet een geldige hash staan.
-            // Hash voor 'admin123':
-            'password_hash' => '$2y$10$QtC.g/g/g/g/g/g/g/g/g/g/g/g/g/g/g/g/g/g/g/g/g/g/g/g',
-            // Excuses, ik zal in de code hieronder de echte hash zetten die werkt.
-            'name' => 'Admin User',
-            'is_active' => 1,
-            'role_id' => 1,
-            'role_name' => 'admin'
-        ];
-    }
-
-    // ECHTE WERKENDE HASH VOOR 'admin123':
-    // $2y$10$MbC.1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1
-    // Laat ik het simpel houden: ik genereer de user dynamic als de repo wordt aangeroepen.
-
-    public function findByEmail(string $email): ?array
-    {
-        // Alleen admin@syntra.be mag erin
-        if ($email === 'admin@syntra.be') {
-            return [
-                'id' => 1,
-                'email' => 'admin@syntra.be',
-                'password_hash' => password_hash('admin123', PASSWORD_DEFAULT), // Live genereren voor zekerheid
-                'name' => 'Admin User',
-                'is_active' => 1,
-                'role_name' => 'admin'
-            ];
-        }
-        return null;
-    }
-
-    public function findById(int $id): ?array
-    {
-        if ($id === 1) {
-            return [
-                'id' => 1,
-                'email' => 'admin@syntra.be',
-                'name' => 'Admin User',
-                'role_id' => 1,
-                'is_active' => 1,
-                'role_name' => 'admin'
-            ];
-        }
-        return null;
-    }
-
-    public function getAll(): array
-    {
-        return [$this->findById(1)];
-    }
-
-    // Dummy methodes voor create/update (doen niets in mock modus)
-    public function create(string $email, string $name, string $plainPassword, int $roleId): void {}
-    public function update(int $id, string $name, int $roleId): void {}
-    public function updatePassword(int $id, string $plainPassword): void {}
-    public function disable(int $id): void {}
-    public function enable(int $id): void {}
 }
