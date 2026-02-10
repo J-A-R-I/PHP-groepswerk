@@ -54,11 +54,26 @@ class ItemsController
      */
     public function index(): void
     {
-        $items = $this->itemsRepository->getAll();
+        // Filter-parameters uit de URL ophalen (?category_id=X&status=Y)
+        $filterCategoryId = isset($_GET['category_id']) && $_GET['category_id'] !== ''
+            ? (int)$_GET['category_id']
+            : null;
+        $filterStatus = isset($_GET['status']) && $_GET['status'] !== ''
+            ? trim($_GET['status'])
+            : null;
+
+        // Items ophalen met filters (of alle items als er geen filters zijn)
+        $items = $this->itemsRepository->getFiltered($filterCategoryId, $filterStatus);
+
+        // Categorieën ophalen voor de filter-dropdown
+        $categories = $this->categoriesRepository?->getAll() ?? [];
 
         View::render('items.php', [
-            'title' => $this->title,
-            'items' => $items,
+            'title'            => $this->title,
+            'items'            => $items,
+            'categories'       => $categories,
+            'filterCategoryId' => $filterCategoryId,
+            'filterStatus'     => $filterStatus,
         ]);
     }
 

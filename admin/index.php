@@ -64,8 +64,12 @@ $router->get('/', function ()  use ($requireAdmin): void {
 });
 
 
-$router->get('/items', function (): void {
-    (new ItemsController(ItemsRepository::make()))->index();
+$router->get('/items', function () use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(
+        ItemsRepository::make(),
+        CategoriesRepository::make()
+    ))->index();
 });
 
 // Item aanmaken: formulier tonen (GET) en opslaan (POST)
