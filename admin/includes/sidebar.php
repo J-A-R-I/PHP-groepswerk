@@ -44,15 +44,7 @@ function sidebarLinkClass(bool $active): string
             Media
         </a>
 
-        <a href="<?= ADMIN_BASE_PATH ?>/users"
-           class="<?= sidebarLinkClass(isActiveAdmin($currentPath, ADMIN_BASE_PATH . '/users')) ?>">
-            Users
-        </a>
 
-        <a href="<?= ADMIN_BASE_PATH ?>/roles"
-           class="<?= sidebarLinkClass(isActiveAdmin($currentPath, ADMIN_BASE_PATH . '/roles')) ?>">
-            Roles
-        </a>
 
         <hr class="border-slate-700 my-4">
 
