@@ -5,13 +5,21 @@ declare(strict_types=1);
  * Items Overzicht View — ToolTrack Admin
  *
  * Doel:
- * Toont alle items in een overzichtelijke tabel.
+ * Toont alle items in een overzichtelijke tabel met filtermogelijkheden.
  * Inclusief categorie-naam, status-badge en thumbnail (of placeholder).
  *
  * Variabelen beschikbaar via View::render():
- * - $items → array met per item: id, name, brand, status, created_at,
- *   category_name, media_filename, media_path
+ * - $items            → array met items (gefilterd of alle)
+ * - $categories       → array met categorieën voor de filter-dropdown
+ * - $filterCategoryId → actieve categorie-filter (int of null)
+ * - $filterStatus     → actieve status-filter (string of null)
  */
+
+// Filter-variabelen veilig initialiseren
+$categories       = $categories ?? [];
+$filterCategoryId = $filterCategoryId ?? null;
+$filterStatus     = $filterStatus ?? null;
+$hasActiveFilters = ($filterCategoryId !== null || $filterStatus !== null);
 
 /**
  * statusBadgeClass()
@@ -58,7 +66,7 @@ function statusLabel(string $status): string
             <h1 class="text-2xl font-bold text-gray-900">Items Beheer</h1>
             <p class="text-sm text-gray-500 mt-1">Overzicht van alle items in het systeem</p>
         </div>
-        <!-- "Nieuw Item" knop (visueel, nog geen functionaliteit) -->
+        <!-- "Nieuw Item" knop -->
         <a href="<?= ADMIN_BASE_PATH ?>/items/create"
            class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors duration-200">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -67,6 +75,58 @@ function statusLabel(string $status): string
             Nieuw Item
         </a>
     </div>
+
+    <!-- Filter Toolbar -->
+    <form method="GET" action="<?= ADMIN_BASE_PATH ?>/items" class="mb-4">
+        <div class="flex flex-wrap items-center gap-3">
+
+            <!-- Filter icoon -->
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/>
+                </svg>
+                Filters
+            </div>
+
+            <!-- Categorie filter dropdown -->
+            <select name="category_id"
+                    onchange="this.form.submit()"
+                    class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all duration-200 appearance-none pr-8"
+                    style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%239ca3af%22 stroke-width=%222%22%3E%3Cpath stroke-linecap=%22round%22 stroke-linejoin=%22round%22 d=%22M19.5 8.25l-7.5 7.5-7.5-7.5%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1rem;">
+                <option value="">Alle Categorieën</option>
+                <?php foreach ($categories as $cat): ?>
+                    <option value="<?= (int)$cat['id'] ?>"
+                        <?= ($filterCategoryId === (int)$cat['id']) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cat['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <!-- Status filter dropdown -->
+            <select name="status"
+                    onchange="this.form.submit()"
+                    class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all duration-200 appearance-none pr-8"
+                    style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%239ca3af%22 stroke-width=%222%22%3E%3Cpath stroke-linecap=%22round%22 stroke-linejoin=%22round%22 d=%22M19.5 8.25l-7.5 7.5-7.5-7.5%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1rem;">
+                <option value="">Alle Statussen</option>
+                <option value="available"   <?= ($filterStatus === 'available')   ? 'selected' : '' ?>>Beschikbaar</option>
+                <option value="maintenance" <?= ($filterStatus === 'maintenance') ? 'selected' : '' ?>>Onderhoud</option>
+                <option value="lost"        <?= ($filterStatus === 'lost')        ? 'selected' : '' ?>>Verloren</option>
+                <option value="retired"     <?= ($filterStatus === 'retired')     ? 'selected' : '' ?>>Buiten dienst</option>
+            </select>
+
+            <?php if ($hasActiveFilters): ?>
+                <!-- Filters wissen knop, alleen zichtbaar als er actieve filters zijn -->
+                <a href="<?= ADMIN_BASE_PATH ?>/items"
+                   class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors duration-200">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Filters wissen
+                </a>
+            <?php endif; ?>
+
+        </div>
+    </form>
 
     <!-- Tabel in een witte kaart -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

@@ -16,6 +16,7 @@ use Admin\Controllers\UsersController;
 use Admin\Core\Auth;
 use Admin\Core\Router;
 use Admin\Models\StatsModel;
+use Admin\Repositories\CategoriesRepository;
 use Admin\Repositories\ItemsRepository;
 use Admin\Repositories\MediaRepository;
 use Admin\Repositories\PostsRepository;
@@ -63,8 +64,56 @@ $router->get('/', function ()  use ($requireAdmin): void {
 });
 
 
-$router->get('/items', function (): void {
-    (new ItemsController(ItemsRepository::make()))->index();
+$router->get('/items', function () use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(
+        ItemsRepository::make(),
+        CategoriesRepository::make()
+    ))->index();
+});
+
+// Item aanmaken: formulier tonen (GET) en opslaan (POST)
+$router->get('/items/create', function () use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(
+        ItemsRepository::make(),
+        CategoriesRepository::make(),
+        MediaRepository::make()
+    ))->create();
+});
+
+$router->post('/items/store', function () use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(
+        ItemsRepository::make(),
+        CategoriesRepository::make(),
+        MediaRepository::make()
+    ))->store();
+});
+
+// Item bewerken: formulier tonen (GET) en bijwerken (POST)
+$router->get('/items/{id}/edit', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(
+        ItemsRepository::make(),
+        CategoriesRepository::make(),
+        MediaRepository::make()
+    ))->edit($id);
+});
+
+$router->post('/items/{id}/update', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(
+        ItemsRepository::make(),
+        CategoriesRepository::make(),
+        MediaRepository::make()
+    ))->update($id);
+});
+
+// Item verwijderen (POST voor veiligheid)
+$router->post('/items/{id}/delete', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(ItemsRepository::make()))->delete($id);
 });
 
 // Placeholder route: categorieën overzicht

@@ -43,6 +43,63 @@ final class ItemsRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * getFiltered()
+     *
+     * Doel:
+     * Haalt items op met optionele filters voor categorie en status.
+     * Bouwt dynamisch WHERE-clausules op basis van de meegegeven parameters.
+     *
+     * Parameters:
+     * - $categoryId: optioneel categorie-filter (null = alle categorieën)
+     * - $status: optioneel status-filter (null = alle statussen)
+     *
+     * Resultaat:
+     * Array met items, inclusief categorie-naam en media-gegevens via JOINs.
+     */
+    public function getFiltered(?int $categoryId = null, ?string $status = null): array
+    {
+        $sql = "SELECT 
+                    i.id, 
+                    i.category_id, 
+                    i.featured_media_id, 
+                    i.name, 
+                    i.brand, 
+                    i.description, 
+                    i.status, 
+                    i.created_at,
+                    c.name as category_name, 
+                    m.filename as image_filename,
+                    m.path as image_path
+                FROM items i
+                LEFT JOIN categories c ON i.category_id = c.id
+                LEFT JOIN media m ON i.featured_media_id = m.id";
+
+        // Dynamische WHERE-clausules opbouwen
+        $conditions = [];
+        $params     = [];
+
+        if ($categoryId !== null) {
+            $conditions[] = 'i.category_id = :category_id';
+            $params['category_id'] = $categoryId;
+        }
+
+        if ($status !== null && $status !== '') {
+            $conditions[] = 'i.status = :status';
+            $params['status'] = $status;
+        }
+
+        if (!empty($conditions)) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' ORDER BY i.created_at DESC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
 
     public function find(int $id): ?array
     {
