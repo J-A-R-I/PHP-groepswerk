@@ -81,19 +81,8 @@ $router->post('/logout', function (): void {
 
 $router->get('/users', function () use ($requireAdmin): void {
     $requireAdmin();
-
-//$router->get('/login', function (): void {
-//    (new AuthController(UsersRepository::make()))->showLogin();
-//});
-//
-//$router->post('/login', function (): void {
-//    (new AuthController(UsersRepository::make()))->login();
-//});
-//
-//$router->post('/logout', function (): void {
-//    (new AuthController(UsersRepository::make()))->logout();
-//});
-
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->index();
+});
 
 $router->get('/posts', function () use ($requireAdmin): void {
     $requireAdmin();
