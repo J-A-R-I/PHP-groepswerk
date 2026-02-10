@@ -67,6 +67,22 @@ $router->get('/items', function (): void {
     (new ItemsController(ItemsRepository::make()))->index();
 });
 
+// Placeholder route: categorieën overzicht
+$router->get('/categories', function () use ($requireAdmin): void {
+    $requireAdmin();
+    \Admin\Core\View::render('categories.php', [
+        'title' => 'Categorieën',
+    ]);
+});
+
+// Placeholder route: reserveringen overzicht
+$router->get('/reservations', function () use ($requireAdmin): void {
+    $requireAdmin();
+    \Admin\Core\View::render('reservations.php', [
+        'title' => 'Reserveringen',
+    ]);
+});
+
 $router->get('/login', function (): void {
     (new AuthController(UsersRepository::make()))->showLogin();
 });

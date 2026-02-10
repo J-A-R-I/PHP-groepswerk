@@ -27,7 +27,7 @@ class View
         extract($data, EXTR_SKIP);
 
         if (!isset($title) || $title === '') {
-            $title = 'MiniCMS';
+            $title = 'ToolTrack';
         }
 
         $viewPath = __DIR__ . '/../../../views/' . ltrim($view, '/');
