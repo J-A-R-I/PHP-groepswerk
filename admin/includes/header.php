@@ -44,5 +44,5 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body class="bg-gray-50 font-sans antialiased">
 <div class="flex min-h-screen">

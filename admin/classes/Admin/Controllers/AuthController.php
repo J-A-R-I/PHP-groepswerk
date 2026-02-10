@@ -106,6 +106,7 @@ class AuthController
          */
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['user_role'] = (string)$user['role_name'];
+        $_SESSION['user_name'] = (string)$user['name'];
 
         header('Location: /admin');
         exit;
