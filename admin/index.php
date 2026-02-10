@@ -9,12 +9,14 @@ require __DIR__ . '/autoload.php';
 use Admin\Controllers\AuthController;
 use Admin\Controllers\DashboardController;
 use Admin\Controllers\ErrorController;
+use Admin\Controllers\ItemsController;
 use Admin\Controllers\MediaController;
 use Admin\Controllers\PostsController;
 use Admin\Controllers\UsersController;
 use Admin\Core\Auth;
 use Admin\Core\Router;
 use Admin\Models\StatsModel;
+use Admin\Repositories\ItemsRepository;
 use Admin\Repositories\MediaRepository;
 use Admin\Repositories\PostsRepository;
 use Admin\Repositories\RolesRepository;
@@ -58,6 +60,26 @@ $requireAdmin = function () use ($errorController): void {
 $router->get('/', function (): void {
     (new DashboardController(new StatsModel()))->index();
 });
+
+
+$router->get('/items', function (): void {
+    (new ItemsController(ItemsRepository::make()))->index();
+});
+
+$router->get('/login', function (): void {
+    (new AuthController(UsersRepository::make()))->showLogin();
+});
+
+$router->post('/login', function (): void {
+    (new AuthController(UsersRepository::make()))->login();
+});
+
+$router->post('/logout', function (): void {
+    (new AuthController(UsersRepository::make()))->logout();
+});
+
+$router->get('/users', function () use ($requireAdmin): void {
+    $requireAdmin();
 
 //$router->get('/login', function (): void {
 //    (new AuthController(UsersRepository::make()))->showLogin();

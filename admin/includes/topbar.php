@@ -1,10 +1,11 @@
 <?php
-if (!isset($title)) {
-    $title = 'MiniCMS Pro';
-}
+/**
+ * Topbar (minimalistisch)
+ *
+ * Doel:
+ * De topbar is in het ToolTrack-ontwerp niet zichtbaar als apart element.
+ * De sidebar bevat al het gebruikersprofiel.
+ * We houden een lege container aan zodat de View::render() methode niet breekt.
+ */
 ?>
 
-<div class="flex items-center justify-between bg-white border-b px-6 py-4">
-    <h1 class="text-xl font-semibold"><?php echo $title; ?></h1>
-    <div class="text-sm text-gray-600">Admin</div>
-</div>

@@ -19,10 +19,56 @@ final class ItemsRepository
     {
         return new self(Database::getConnection());
     }
+  
+    public function getAll(): array
+    {
+        $stmt = $this->pdo->query('
+            SELECT
+                i.id,
+                i.name,
+                i.brand,
+                i.description,
+                i.status,
+                i.created_at,
+                c.name        AS category_name,
+                m.filename    AS media_filename,
+                m.path        AS media_path
+            FROM items i
+            LEFT JOIN categories c ON c.id = i.category_id
+            LEFT JOIN media m      ON m.id = i.featured_media_id
+            ORDER BY i.created_at DESC
+        ');
 
-    /**
-     * Haalt alle items op inclusief categorie-naam en foto-pad.
-     */
+        return $stmt->fetchAll();
+    }
+
+    public function find(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare('
+            SELECT
+                i.id,
+                i.name,
+                i.brand,
+                i.description,
+                i.status,
+                i.created_at,
+                i.category_id,
+                i.featured_media_id,
+                c.name        AS category_name,
+                m.filename    AS media_filename,
+                m.path        AS media_path
+            FROM items i
+            LEFT JOIN categories c ON c.id = i.category_id
+            LEFT JOIN media m      ON m.id = i.featured_media_id
+            WHERE i.id = :id
+        ');
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch();
+
+        return $row ?: null;
+    }
+}
+
     public function getAll(): array
     {
         $sql = "SELECT 
@@ -46,9 +92,7 @@ final class ItemsRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
-    /**
-     * Zoekt één item op basis van ID (voor bewerken/verwijderen).
-     */
+
     public function find(int $id): ?array
     {
         $sql = "SELECT 
@@ -69,9 +113,6 @@ final class ItemsRepository
         return $result ?: null;
     }
 
-    /**
-     * Haalt het 'Featured' item op voor de homepage (nieuwste item met een foto).
-     */
     public function getFeatured(): ?array
     {
         $sql = "SELECT 
@@ -93,9 +134,6 @@ final class ItemsRepository
         return $result ?: null;
     }
 
-    /**
-     * Telt hoeveel items er per categorie zijn (voor de homepage blokken).
-     */
     public function getCategoryStats(): array
     {
         $sql = "SELECT c.name, COUNT(i.id) as count 
@@ -108,9 +146,6 @@ final class ItemsRepository
         return $stmt->fetchAll(PDO::FETCH_KEY_PAIR) ?: [];
     }
 
-    /**
-     * Maakt een nieuw item aan in de database.
-     */
     public function create(string $name, ?string $brand, string $description, ?int $categoryId, string $status, ?int $featuredMediaId): int
     {
         $sql = "INSERT INTO items (name, brand, description, category_id, status, featured_media_id, created_at)
@@ -129,9 +164,6 @@ final class ItemsRepository
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Werkt een bestaand item bij.
-     */
     public function update(int $id, string $name, ?string $brand, string $description, ?int $categoryId, string $status, ?int $featuredMediaId): void
     {
         $sql = "UPDATE items 
@@ -156,9 +188,6 @@ final class ItemsRepository
         ]);
     }
 
-    /**
-     * Verwijdert een item.
-     */
     public function delete(int $id): void
     {
         $sql = "DELETE FROM items WHERE id = :id";
