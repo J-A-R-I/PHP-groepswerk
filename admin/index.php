@@ -87,6 +87,31 @@ $router->post('/items/store', function () use ($requireAdmin): void {
     ))->store();
 });
 
+// Item bewerken: formulier tonen (GET) en bijwerken (POST)
+$router->get('/items/{id}/edit', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(
+        ItemsRepository::make(),
+        CategoriesRepository::make(),
+        MediaRepository::make()
+    ))->edit($id);
+});
+
+$router->post('/items/{id}/update', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(
+        ItemsRepository::make(),
+        CategoriesRepository::make(),
+        MediaRepository::make()
+    ))->update($id);
+});
+
+// Item verwijderen (POST voor veiligheid)
+$router->post('/items/{id}/delete', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new ItemsController(ItemsRepository::make()))->delete($id);
+});
+
 // Placeholder route: categorieën overzicht
 $router->get('/categories', function () use ($requireAdmin): void {
     $requireAdmin();
