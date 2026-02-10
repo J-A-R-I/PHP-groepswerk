@@ -3,30 +3,42 @@ declare(strict_types=1);
 
 namespace Admin\Controllers;
 
+use Admin\Core\Flash;
 use Admin\Core\View;
+use Admin\Repositories\CategoriesRepository;
 use Admin\Repositories\ItemsRepository;
+use Admin\Repositories\MediaRepository;
+use Admin\Core\Database;
 
 /**
  * ItemsController
  *
  * Doel:
  * Beheert de items-pagina's in het admin panel.
- * Haalt data op via ItemsRepository en rendert de juiste view.
+ * Haalt data op via repositories en rendert de juiste view.
  */
 class ItemsController
 {
     private ItemsRepository $itemsRepository;
+    private ?CategoriesRepository $categoriesRepository;
+    private ?MediaRepository $mediaRepository;
     private string $title = 'Items Beheer';
 
     /**
      * __construct()
      *
      * Doel:
-     * Bewaart de repository zodat de controller-methodes er gebruik van kunnen maken.
+     * Bewaart de repositories zodat de controller-methodes er gebruik van kunnen maken.
+     * CategoriesRepository en MediaRepository zijn optioneel (niet nodig voor index).
      */
-    public function __construct(ItemsRepository $itemsRepository)
-    {
+    public function __construct(
+        ItemsRepository $itemsRepository,
+        ?CategoriesRepository $categoriesRepository = null,
+        ?MediaRepository $mediaRepository = null
+    ) {
         $this->itemsRepository = $itemsRepository;
+        $this->categoriesRepository = $categoriesRepository;
+        $this->mediaRepository = $mediaRepository;
     }
 
     /**
@@ -48,5 +60,225 @@ class ItemsController
             'title' => $this->title,
             'items' => $items,
         ]);
+    }
+
+    /**
+     * create()
+     *
+     * Doel:
+     * Toont het formulier om een nieuw item aan te maken.
+     *
+     * Werking:
+     * 1) Haalt alle categorieën op voor de dropdown.
+     * 2) Haalt eventueel oude formulierdata op uit de Flash-sessie.
+     * 3) Rendert item-create.php met categorieën en old-data.
+     */
+    public function create(): void
+    {
+        $categories = $this->categoriesRepository?->getAll() ?? [];
+
+        // Oude invoer ophalen na een gefaalde validatie
+        $old = Flash::get('old');
+        if (!is_array($old)) {
+            $old = [
+                'name'        => '',
+                'brand'       => '',
+                'description' => '',
+                'category_id' => '',
+                'status'      => 'available',
+            ];
+        }
+
+        View::render('item-create.php', [
+            'title'      => 'Nieuw Item',
+            'categories' => $categories,
+            'old'        => $old,
+        ]);
+    }
+
+    /**
+     * store()
+     *
+     * Doel:
+     * Verwerkt het formulier om een nieuw item op te slaan.
+     *
+     * Werking:
+     * 1) Lees en saniteer POST-data.
+     * 2) Valideer verplichte velden (name, category_id).
+     * 3) Als er een afbeelding is geüpload:
+     *    a) Controleer MIME-type en bestandsgrootte.
+     *    b) Genereer een unieke bestandsnaam.
+     *    c) Verplaats het bestand naar public/uploads/.
+     * 4) Start een database-transactie.
+     * 5) Voeg de afbeelding toe aan de media-tabel (indien aanwezig).
+     * 6) Voeg het item toe aan de items-tabel met het media-ID.
+     * 7) Commit de transactie.
+     * 8) Bij fouten: rollback en verwijder het geüploade bestand.
+     * 9) Redirect naar /admin/items met een flash-melding.
+     */
+    public function store(): void
+    {
+        // --- Stap 1: POST-data ophalen en sanitizen ---
+        $name        = trim((string)($_POST['name'] ?? ''));
+        $brand       = trim((string)($_POST['brand'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
+        $categoryId  = $_POST['category_id'] ?? '';
+        $status      = trim((string)($_POST['status'] ?? 'available'));
+
+        // Oude invoer bewaren voor het geval de validatie faalt
+        $oldData = [
+            'name'        => $name,
+            'brand'       => $brand,
+            'description' => $description,
+            'category_id' => $categoryId,
+            'status'      => $status,
+        ];
+        Flash::set('old', $oldData);
+
+        // --- Stap 2: Validatie ---
+        $errors = [];
+
+        if ($name === '') {
+            $errors[] = 'Naam is verplicht.';
+        }
+
+        if ($categoryId === '' || $categoryId === null) {
+            $errors[] = 'Categorie is verplicht.';
+        }
+
+        // Status moet een geldige waarde zijn
+        $validStatuses = ['available', 'maintenance', 'lost', 'retired'];
+        if (!in_array($status, $validStatuses, true)) {
+            $errors[] = 'Ongeldige status geselecteerd.';
+        }
+
+        // --- Stap 3: Afbeelding validatie (optioneel veld) ---
+        $hasImage = isset($_FILES['image'])
+            && is_array($_FILES['image'])
+            && (int)($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK;
+
+        $uploadedFilePath = null; // Pad naar het verplaatste bestand (voor cleanup bij fout)
+
+        if ($hasImage) {
+            $file = $_FILES['image'];
+
+            // Maximale bestandsgrootte: 5 MB
+            $maxBytes = 5 * 1024 * 1024;
+            if ((int)$file['size'] > $maxBytes) {
+                $errors[] = 'Afbeelding is te groot. Maximum 5 MB.';
+            }
+
+            // MIME-type controleren met finfo (veiliger dan alleen extensie)
+            $tmpPath = (string)$file['tmp_name'];
+            $finfo   = new \finfo(FILEINFO_MIME_TYPE);
+            $mime    = (string)$finfo->file($tmpPath);
+
+            $allowedMimes = [
+                'image/jpeg' => 'jpg',
+                'image/png'  => 'png',
+                'image/webp' => 'webp',
+            ];
+
+            if (!array_key_exists($mime, $allowedMimes)) {
+                $errors[] = 'Ongeldig bestandstype. Enkel JPG, PNG of WEBP.';
+            }
+        }
+
+        // Validatie gefaald? Terug naar formulier met foutmeldingen
+        if (!empty($errors)) {
+            Flash::set('warning', $errors);
+            header('Location: ' . ADMIN_BASE_PATH . '/items/create');
+            exit;
+        }
+
+        // --- Stap 4–7: Bestand uploaden + database-transactie ---
+        $pdo = Database::getConnection();
+        $pdo->beginTransaction();
+
+        try {
+            $mediaId = null;
+
+            // Als er een afbeelding is, eerst uploaden en in media-tabel opslaan
+            if ($hasImage) {
+                $file = $_FILES['image'];
+                $tmpPath = (string)$file['tmp_name'];
+                $finfo   = new \finfo(FILEINFO_MIME_TYPE);
+                $mime    = (string)$finfo->file($tmpPath);
+
+                $allowedMimes = [
+                    'image/jpeg' => 'jpg',
+                    'image/png'  => 'png',
+                    'image/webp' => 'webp',
+                ];
+                $ext = $allowedMimes[$mime];
+
+                // Unieke bestandsnaam genereren (MD5 hash van random bytes)
+                $filename = md5(random_bytes(16)) . '.' . $ext;
+
+                // Uploadmap bepalen (relatief t.o.v. de projectroot)
+                $projectRoot = dirname(__DIR__, 4);
+                $uploadDir   = $projectRoot . '/public/uploads';
+
+                if (!is_dir($uploadDir)) {
+                    throw new \RuntimeException('Upload map ontbreekt: public/uploads');
+                }
+
+                $destination = $uploadDir . '/' . $filename;
+
+                // Bestand verplaatsen van tijdelijke locatie naar uploads
+                if (!move_uploaded_file($tmpPath, $destination)) {
+                    throw new \RuntimeException('Kon bestand niet opslaan.');
+                }
+
+                // Pad onthouden voor cleanup bij rollback
+                $uploadedFilePath = $destination;
+
+                // Alt-tekst is de originele bestandsnaam zonder extensie
+                $originalName = (string)$file['name'];
+                $altText = pathinfo($originalName, PATHINFO_FILENAME);
+
+                // Media-record aanmaken in de database
+                $mediaId = $this->mediaRepository->createImage(
+                    $originalName,
+                    $filename,
+                    'uploads',
+                    $mime,
+                    (int)$file['size'],
+                    $altText
+                );
+            }
+
+            // Item-record aanmaken met het (optionele) media-ID
+            $this->itemsRepository->create(
+                $name,
+                $brand !== '' ? $brand : null,
+                $description,
+                $categoryId !== '' ? (int)$categoryId : null,
+                $status,
+                $mediaId
+            );
+
+            // Alles gelukt: transactie bevestigen
+            $pdo->commit();
+
+            // Oude formulierdata wissen
+            Flash::set('old', []);
+            Flash::set('success', 'Item succesvol aangemaakt.');
+            header('Location: ' . ADMIN_BASE_PATH . '/items');
+            exit;
+
+        } catch (\Throwable $e) {
+            // --- Stap 8: Rollback bij fouten ---
+            $pdo->rollBack();
+
+            // Geüpload bestand opruimen als het al verplaatst was
+            if ($uploadedFilePath !== null && is_file($uploadedFilePath)) {
+                @unlink($uploadedFilePath);
+            }
+
+            Flash::set('warning', ['Er ging iets mis: ' . $e->getMessage()]);
+            header('Location: ' . ADMIN_BASE_PATH . '/items/create');
+            exit;
+        }
     }
 }
