@@ -13,12 +13,14 @@ require __DIR__ . '/autoload.php';
 use Admin\Controllers\AuthController;
 use Admin\Controllers\DashboardController;
 use Admin\Controllers\ErrorController;
+use Admin\Controllers\ItemsController;
 use Admin\Controllers\MediaController;
 use Admin\Controllers\PostsController;
 use Admin\Controllers\UsersController;
 use Admin\Core\Auth;
 use Admin\Core\Router;
 use Admin\Models\StatsModel;
+use Admin\Repositories\ItemsRepository;
 use Admin\Repositories\MediaRepository;
 use Admin\Repositories\PostsRepository;
 use Admin\Repositories\RolesRepository;
@@ -81,6 +83,13 @@ $requireAdmin = function () use ($errorController): void {
  */
 $router->get('/', function (): void {
     (new DashboardController(new StatsModel()))->index();
+});
+
+/**
+ * Items
+ */
+$router->get('/items', function (): void {
+    (new ItemsController(ItemsRepository::make()))->index();
 });
 
 /**
