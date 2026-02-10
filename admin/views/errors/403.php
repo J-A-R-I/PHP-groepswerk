@@ -1,5 +1,12 @@
 <?php
 declare(strict_types=1);
+
+use Admin\Core\Auth;
+
+if (!Auth::isAdmin()) {
+    header('Location: /');
+    exit;
+}
 ?>
 
 <section class="p-6">
@@ -16,5 +23,6 @@ declare(strict_types=1);
            href="<?= ADMIN_BASE_PATH ?>">
             Terug naar dashboard
         </a>
+
     </div>
 </section>

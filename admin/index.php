@@ -34,10 +34,10 @@ $uri = rtrim($uri, '/') ?: '/';
 
 $publicRoutes = ['/']; // /login
 
-//if (!Auth::check() && !in_array($uri, $publicRoutes, true)) {
-//    header('Location: ' . ADMIN_BASE_PATH . '/login');
-//    exit;
-//}
+if (!Auth::check() && !in_array($uri, $publicRoutes, true)) {
+    header('Location: ' . ADMIN_BASE_PATH . '/');
+    exit;
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -57,7 +57,8 @@ $requireAdmin = function () use ($errorController): void {
     }
 };
 
-$router->get('/', function (): void {
+$router->get('/', function ()  use ($requireAdmin): void {
+    $requireAdmin();
     (new DashboardController(new StatsModel()))->index();
 });
 
@@ -93,68 +94,34 @@ $router->get('/users', function () use ($requireAdmin): void {
 //    (new AuthController(UsersRepository::make()))->logout();
 //});
 
-$router->get('/users', function () /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
-    (new UsersController(UsersRepository::make(), RolesRepository::make()))->index();
-});
 
-$router->get('/users/create', function () /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
-    (new UsersController(UsersRepository::make(), RolesRepository::make()))->create();
-});
-
-$router->post('/users/store', function ()/* use ($requireAdmin)*/: void {
-    //$requireAdmin();
-    (new UsersController(UsersRepository::make(), RolesRepository::make()))->store();
-});
-
-$router->get('/users/{id}/edit', function (int $id) /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
-    (new UsersController(UsersRepository::make(), RolesRepository::make()))->edit($id);
-});
-
-$router->post('/users/{id}/update', function (int $id) /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
-    (new UsersController(UsersRepository::make(), RolesRepository::make()))->update($id);
-});
-
-$router->post('/users/{id}/reset-password', function (int $id) /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
-    (new UsersController(UsersRepository::make(), RolesRepository::make()))->resetPassword($id);
-});
-
-$router->post('/users/{id}/disable', function (int $id) /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
-    (new UsersController(UsersRepository::make(), RolesRepository::make()))->disable($id);
-});
-
-$router->post('/users/{id}/enable', function (int $id) /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
-    (new UsersController(UsersRepository::make(), RolesRepository::make()))->enable($id);
-});
-
-$router->get('/posts', function (): void {
+$router->get('/posts', function () use ($requireAdmin): void {
+    $requireAdmin();
     (new PostsController(PostsRepository::make()))->index();
 });
 
-$router->get('/posts/create', function (): void {
+$router->get('/posts/create', function () use ($requireAdmin): void {
+    $requireAdmin();
     (new PostsController(PostsRepository::make()))->create();
 });
 
-$router->post('/posts/store', function (): void {
+$router->post('/posts/store', function () use ($requireAdmin): void {
+    $requireAdmin();
     (new PostsController(PostsRepository::make()))->store();
 });
 
-$router->get('/posts/{id}/edit', function (int $id): void {
+$router->get('/posts/{id}/edit', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
     (new PostsController(PostsRepository::make()))->edit($id);
 });
 
-$router->post('/posts/{id}/update', function (int $id): void {
+$router->post('/posts/{id}/update', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
     (new PostsController(PostsRepository::make()))->update($id);
 });
 
-$router->get('/posts/{id}/delete', function (int $id) /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
+$router->get('/posts/{id}/delete', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
     (new PostsController(PostsRepository::make()))->deleteConfirm($id);
 });
 

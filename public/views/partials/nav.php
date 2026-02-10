@@ -23,24 +23,37 @@ use Admin\Core\Auth;
         <div>
             <?php if (Auth::check()): ?>
                 <div class="flex items-center gap-4">
-                    <span class="hidden md:inline text-sm text-gray-500">
-                        <?= htmlspecialchars($_SESSION['user_name'] ?? 'Gebruiker') ?>
-                    </span>
+
+                    <div class="hidden md:flex flex-col items-end leading-tight mr-2">
+                        <span class="text-sm font-semibold text-gray-900">
+                            <?= htmlspecialchars($_SESSION['user_name'] ?? 'Gebruiker') ?>
+                        </span>
+                        <span class="text-[10px] uppercase tracking-wider font-bold
+                            <?= ($_SESSION['user_role'] ?? '') === 'admin' ? 'text-blue-600' : 'text-gray-400' ?>">
+                            <?= htmlspecialchars($_SESSION['user_role'] ?? 'Gast') ?>
+                        </span>
+                    </div>
 
                     <?php if (Auth::isAdmin()): ?>
-                        <a href="/admin" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition">
-                            Admin Panel
+                        <a href="/admin" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            Dashboard
                         </a>
                     <?php endif; ?>
 
-                    <a href="/logout" class="bg-gray-100 hover:bg-gray-200 text-gray-900 px-5 py-2.5 rounded-lg text-sm font-semibold transition border border-gray-200">
-                        Uitloggen
+                    <a href="/logout" class="text-gray-500 hover:text-red-600 transition p-2" title="Uitloggen">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                     </a>
                 </div>
             <?php else: ?>
-                <a href="/login" class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
-                    Inloggen
-                </a>
+                <div class="flex gap-3">
+                    <a href="/login" class="text-gray-600 hover:text-gray-900 px-4 py-2.5 rounded-lg text-sm font-semibold transition">
+                        Inloggen
+                    </a>
+                    <a href="/register" class="bg-blue-900 hover:bg-blue-800 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
+                        Registreren
+                    </a>
+                </div>
             <?php endif; ?>
         </div>
     </div>
