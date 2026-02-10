@@ -1,9 +1,11 @@
 RewriteEngine On
+# Deze regel is cruciaal wanneer je een Alias gebruikt!
+RewriteBase /admin
 
-# Als een bestand of map echt bestaat, serveer dat normaal
+# Als bestand/map bestaat, gebruik die
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Anders: alles naar index.php
+# Anders alles naar index.php
 RewriteRule ^ index.php [L]
