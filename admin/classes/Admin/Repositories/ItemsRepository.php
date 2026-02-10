@@ -19,55 +19,6 @@ final class ItemsRepository
     {
         return new self(Database::getConnection());
     }
-  
-    public function getAll(): array
-    {
-        $stmt = $this->pdo->query('
-            SELECT
-                i.id,
-                i.name,
-                i.brand,
-                i.description,
-                i.status,
-                i.created_at,
-                c.name        AS category_name,
-                m.filename    AS media_filename,
-                m.path        AS media_path
-            FROM items i
-            LEFT JOIN categories c ON c.id = i.category_id
-            LEFT JOIN media m      ON m.id = i.featured_media_id
-            ORDER BY i.created_at DESC
-        ');
-
-        return $stmt->fetchAll();
-    }
-
-    public function find(int $id): ?array
-    {
-        $stmt = $this->pdo->prepare('
-            SELECT
-                i.id,
-                i.name,
-                i.brand,
-                i.description,
-                i.status,
-                i.created_at,
-                i.category_id,
-                i.featured_media_id,
-                c.name        AS category_name,
-                m.filename    AS media_filename,
-                m.path        AS media_path
-            FROM items i
-            LEFT JOIN categories c ON c.id = i.category_id
-            LEFT JOIN media m      ON m.id = i.featured_media_id
-            WHERE i.id = :id
-        ');
-        $stmt->execute([':id' => $id]);
-        $row = $stmt->fetch();
-
-        return $row ?: null;
-    }
-}
 
     public function getAll(): array
     {
