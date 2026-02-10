@@ -1,78 +1,97 @@
 <?php
 declare(strict_types=1);
 
+session_start();
+
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
-
-/*
-|--------------------------------------------------------------------------
-| Public Front Controller
-|--------------------------------------------------------------------------
-| Dankzij DocumentRoot naar /public en .htaccess komt elke publieke URL hier binnen.
-| Hier bepalen we:
-| - welke route is opgevraagd
-| - welke data nodig is
-| - welke view we tonen
-*/
-
-
+// Autoloader
 require_once __DIR__ . '/../admin/autoload.php';
 
-
 use Admin\Core\Database;
-use Admin\Repositories\PostsRepository;
+use Admin\Core\Auth;
+use Admin\Repositories\ItemsRepository;
+use Admin\Repositories\UsersRepository;
 
-// 1) Alleen het pad uit de URL halen (zonder querystring)
+// URL Parsing
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
-
-// 2) Trailing slash verwijderen ("/posts/" -> "/posts")
 $uri = rtrim($uri, '/') ?: '/';
 
-// 3) PDO connectie ophalen
+// DB & Repo
 $pdo = Database::getConnection();
+$itemsRepo = new ItemsRepository($pdo);
+$usersRepo = new UsersRepository($pdo);
 
-// 4) Repository initialiseren
-$postsRepository = new PostsRepository($pdo);
-
-// 5) Routing
 switch ($uri) {
 
     case '/':
-        // Home: recente published posts
-        $posts = $postsRepository->getPublishedLatest(5);
+        // HOME: Wel featured item, beperkt aantal grid items
+        $featured = $itemsRepo->getFeatured();
+        $items = $itemsRepo->getAll();
+        $categories = $itemsRepo->getCategoryStats();
 
+        $title = 'ToolTrack - Home';
         require __DIR__ . '/views/posts/home.php';
         break;
 
-    case '/posts':
-        // Overzicht: alle published posts
-        $posts = $postsRepository->getPublishedAll();
+    case '/catalogus':
+        // CATALOGUS: Geen featured item focus, ALLE items tonen
+        $items = $itemsRepo->getAll();
+        $categories = $itemsRepo->getCategoryStats();
+        $featured = null; // Dit zorgt ervoor dat de view weet dat het catalogus is
 
-        require __DIR__ . '/views/posts/index.php';
+        $title = 'Catalogus - ToolTrack';
+        require __DIR__ . '/views/posts/home.php';
+        break;
+
+    case '/login':
+        if (Auth::check()) {
+            if (Auth::isAdmin()) {
+                header('Location: /admin');
+            } else {
+                header('Location: /');
+            }
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = trim((string)($_POST['email'] ?? ''));
+            $password = (string)($_POST['password'] ?? '');
+
+            $user = $usersRepo->findByEmail($email);
+
+            if ($user && password_verify($password, (string)$user['password_hash'])) {
+                if ((int)$user['is_active'] !== 1) {
+                    $error = "Dit account is gedeactiveerd.";
+                } else {
+                    session_regenerate_id(true);
+                    $_SESSION['user_id'] = (int)$user['id'];
+                    $_SESSION['user_role'] = (string)$user['role_name'];
+                    $_SESSION['user_name'] = (string)$user['name'];
+
+                    if ($user['role_name'] === 'admin') {
+                        header('Location: /admin');
+                    } else {
+                        header('Location: /');
+                    }
+                    exit;
+                }
+            } else {
+                $error = "E-mailadres of wachtwoord is onjuist.";
+            }
+        }
+        require __DIR__ . '/views/auth/login.php';
+        break;
+
+    case '/logout':
+        Auth::logout();
+        header('Location: /login');
+        exit;
         break;
 
     default:
-        // Detail: /posts/{id}
-        if (preg_match('#^/posts/(\d+)$#', $uri, $matches)) {
-
-            // id uit regex -> integer
-            $postId = (int)$matches[1];
-
-            // Alleen published post ophalen
-            $post = $postsRepository->findPublishedById($postId);
-
-            if (!$post) {
-                http_response_code(404);
-                echo '404 - Post niet gevonden';
-                exit;
-            }
-
-            require __DIR__ . '/views/posts/show.php';
-            break;
-        }
-
         http_response_code(404);
         echo '404 - Pagina niet gevonden';
 }
