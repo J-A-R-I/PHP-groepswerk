@@ -61,20 +61,16 @@ $sidebarUserName = $_SESSION['user_name'] ?? 'Admin';
     <!-- Bovenste deel: Logo + User profiel -->
     <div class="p-5">
 
-        <!-- ToolTrack logo + instellingen icoon -->
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-2">
-                <!-- ToolTrack cube icoon (zelfde als publieke site) -->
-                <div class="w-8 h-8 bg-white border-2 border-gray-900 rounded flex items-center justify-center text-gray-900 hover:bg-gray-900 hover:text-white transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                </div>
-                <span class="text-lg font-bold text-gray-900">ToolTrack</span>
+        <!-- ToolTrack logo: identiek aan de publieke navigatiebalk -->
+        <a href="/" class="flex items-center gap-2 group mb-4">
+            <div class="w-8 h-8 bg-white border-2 border-gray-900 rounded flex items-center justify-center text-gray-900 group-hover:bg-gray-900 group-hover:text-white transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
             </div>
-
-        </div>
+            <span class="font-bold text-xl tracking-tight text-gray-900">ToolTrack</span>
+        </a>
 
         <!-- Gebruikersprofiel -->
-        <div class="flex items-center gap-3 mb-8">
+        <div class="flex items-center gap-3 mb-4">
             <!-- Avatar cirkel met initiaal -->
             <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
