@@ -30,7 +30,7 @@ if (str_starts_with($uri, ADMIN_BASE_PATH)) {
 $uri = rtrim($uri, '/') ?: '/';
 
 
-$publicRoutes = ['/']; // /login
+$publicRoutes = ['/'];
 
 if (!Auth::check() && !in_array($uri, $publicRoutes, true)) {
     header('Location: ' . ADMIN_BASE_PATH . '/');
@@ -59,19 +59,6 @@ $router->get('/', function ()  use ($requireAdmin): void {
     $requireAdmin();
     (new DashboardController(new StatsModel()))->index();
 });
-
-//$router->get('/login', function (): void {
-//    (new AuthController(UsersRepository::make()))->showLogin();
-//});
-//
-//$router->post('/login', function (): void {
-//    (new AuthController(UsersRepository::make()))->login();
-//});
-//
-//$router->post('/logout', function (): void {
-//    (new AuthController(UsersRepository::make()))->logout();
-//});
-
 
 $router->get('/posts', function () use ($requireAdmin): void {
     $requireAdmin();
@@ -103,12 +90,12 @@ $router->get('/posts/{id}/delete', function (int $id) use ($requireAdmin): void 
     (new PostsController(PostsRepository::make()))->deleteConfirm($id);
 });
 
-$router->post('/posts/{id}/delete', function (int $id) /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
+$router->post('/posts/{id}/delete', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
 
     PostsRepository::make()->delete($id);
 
-    \Admin\Core\Flash::set('success', 'Post verwijderd.');
+    Admin\Core\Flash::set('success', 'Post verwijderd.');
     header('Location: ' . ADMIN_BASE_PATH . '/posts');
     exit;
 });
@@ -117,23 +104,23 @@ $router->get('/posts/{id}', function (int $id): void {
     (new PostsController(PostsRepository::make()))->show($id);
 });
 
-$router->get('/media', function () /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
+$router->get('/media', function () use ($requireAdmin): void {
+    $requireAdmin();
     (new MediaController(MediaRepository::make()))->index();
 });
 
-$router->get('/media/upload', function () /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
+$router->get('/media/upload', function () use ($requireAdmin): void {
+    $requireAdmin();
     (new MediaController(MediaRepository::make()))->uploadForm();
 });
 
-$router->post('/media/store', function () /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
+$router->post('/media/store', function () use ($requireAdmin): void {
+    $requireAdmin();
     (new MediaController(MediaRepository::make()))->store();
 });
 
-$router->post('/media/{id}/delete', function (int $id) /* use ($requireAdmin)*/: void {
-    //$requireAdmin();
+$router->post('/media/{id}/delete', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
     (new MediaController(MediaRepository::make()))->delete($id);
 });
 
