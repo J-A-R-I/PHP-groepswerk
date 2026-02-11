@@ -113,6 +113,7 @@ class UsersController
             'errors' => [],
             'old' => [
                 'name' => (string)$user['name'],
+                'email' => (string)$user['email'],
                 'role_id' => (string)$user['role_id'],
             ],
             'pw_errors' => [],
@@ -128,19 +129,25 @@ class UsersController
 
         $user = $this->users->findById($id);
         if ($user === null) {
-            Flash::set('Gebruiker niet gevonden.', 'error');
+            Flash::set('Gebruiker niet gevonden.', 'bg-red-100 text-red-700');
             header('Location: /admin/users');
             exit;
         }
 
         $name = trim((string)($_POST['name'] ?? ''));
+        $email = trim((string)($_POST['email'] ?? ''));
         $roleId = (int)($_POST['role_id'] ?? 0);
+        $password = (string)($_POST['password'] ?? '');
 
         $errors = [];
 
         if ($name === '') { $errors[] = 'Naam is verplicht.'; }
-        if ($roleId <= 0) { $errors[] = 'Kies een rol.'; }
+        if ($email === '') { $errors[] = 'Email is verplicht.'; }
+        // Simpele email validatie
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $errors[] = 'Email is ongeldig.'; }
+        if ($roleId <= 0) { $errors[] = 'Kies een geldige rol.'; }
 
+        // Als er fouten zijn, toon formulier opnieuw
         if (!empty($errors)) {
             View::render('user-edit.php', [
                 'title' => 'Gebruiker bewerken',
@@ -149,64 +156,29 @@ class UsersController
                 'errors' => $errors,
                 'old' => [
                     'name' => $name,
+                    'email' => $email,
                     'role_id' => (string)$roleId,
                 ],
-                'pw_errors' => [],
             ]);
             return;
         }
 
-        $this->users->update($id, $name, $roleId);
+        // 1. Basisgegevens updaten
+        $this->users->update($id, $name, $email, $roleId);
 
-        Flash::set('Gebruiker bijgewerkt.', 'success');
-        header('Location: /admin/users/' . $id . '/edit');
+        // 2. Wachtwoord updaten (alleen als het veld is ingevuld)
+        if ($password !== '') {
+            $this->users->updatePassword($id, $password);
+        }
+
+        Flash::set('Gebruiker succesvol bijgewerkt.', 'bg-green-100 text-green-700');
+        header('Location: /admin/users');
         exit;
     }
 
-    public function resetPassword(int $id): void
-    {
-        if (!Auth::isAdmin()) {
-            header('Location: /admin');
-            exit;
-        }
-
-        $user = $this->users->findById($id);
-        if ($user === null) {
-            Flash::set('Gebruiker niet gevonden.', 'error');
-            header('Location: /admin/users');
-            exit;
-        }
-
-        $password = (string)($_POST['password'] ?? '');
-        $confirm = (string)($_POST['password_confirm'] ?? '');
-
-        $pwErrors = [];
-
-        if ($password === '') { $pwErrors[] = 'Wachtwoord is verplicht.'; }
-        if (strlen($password) < 8) { $pwErrors[] = 'Wachtwoord moet minstens 8 tekens zijn.'; }
-        if ($password !== $confirm) { $pwErrors[] = 'Wachtwoorden komen niet overeen.'; }
-
-        if (!empty($pwErrors)) {
-            View::render('user-edit.php', [
-                'title' => 'Gebruiker bewerken',
-                'user' => $user,
-                'roles' => $this->roles->getAll(),
-                'errors' => [],
-                'old' => [
-                    'name' => (string)$user['name'],
-                    'role_id' => (string)$user['role_id'],
-                ],
-                'pw_errors' => $pwErrors,
-            ]);
-            return;
-        }
-
-        $this->users->updatePassword($id, $password);
-
-        Flash::set('Wachtwoord gereset.', 'success');
-        header('Location: /admin/users/' . $id . '/edit');
-        exit;
-    }
+    // Noot: We hebben updatePassword() hier niet meer los nodig,
+    // omdat dit nu in de algemene update() zit.
+    // Ik laat hem weg of commentarieer hem uit.
 
     public function disable(int $id): void
     {
@@ -215,10 +187,17 @@ class UsersController
             exit;
         }
 
+        // VEILIGHEIDSCHECK: Jezelf niet blokkeren
+        if ($id === (int)($_SESSION['user_id'] ?? 0)) {
+            Flash::set('Je kunt jezelf niet blokkeren.', 'bg-red-100 text-red-700');
+            header('Location: /admin/users');
+            exit;
+        }
+
         $this->users->disable($id);
 
-        Flash::set('Gebruiker geblokkeerd.', 'success');
-        header('Location: /admin/users/' . $id . '/edit');
+        Flash::set('Gebruiker geblokkeerd.', 'bg-green-100 text-green-700');
+        header('Location: /admin/users'); // Terug naar overzicht zoals gevraagd
         exit;
     }
 
@@ -231,8 +210,8 @@ class UsersController
 
         $this->users->enable($id);
 
-        Flash::set('Gebruiker geactiveerd.', 'success');
-        header('Location: /admin/users/' . $id . '/edit');
+        Flash::set('Gebruiker geactiveerd.', 'bg-green-100 text-green-700');
+        header('Location: /admin/users'); // Terug naar overzicht
         exit;
     }
 }

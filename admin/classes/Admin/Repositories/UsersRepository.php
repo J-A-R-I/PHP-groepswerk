@@ -92,12 +92,13 @@ class UsersRepository
 
     /**
      * update()
-     * Doel: naam + rol wijzigen.
+     * Doel: naam, email + rol wijzigen.
      */
-    public function update(int $id, string $name, int $roleId): void
+    public function update(int $id, string $name, string $email, int $roleId): void
     {
         $sql = "UPDATE users
                 SET name = :name,
+                    email = :email,
                     role_id = :role_id
                 WHERE id = :id
                 LIMIT 1";
@@ -106,6 +107,7 @@ class UsersRepository
         $stmt->execute([
             'id' => $id,
             'name' => $name,
+            'email' => $email,
             'role_id' => $roleId,
         ]);
     }
