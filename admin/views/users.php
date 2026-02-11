@@ -1,7 +1,36 @@
 <?php
 declare(strict_types=1);
 
-use Admin\Core\Auth;
+$currentUserId = (int)($_SESSION['user_id'] ?? 0);
+
+/**
+ * Gebruikers Overzicht View — ToolTrack Admin
+ *
+ * Doel:
+ * Toont een lijst van alle geregistreerde gebruikers.
+ * Inclusief avatar (initialen), rol en status management.
+ */
+
+// Helper functie voor initialen
+function getUserInitials(string $name): string {
+    $parts = explode(' ', trim($name));
+    $initials = '';
+    foreach ($parts as $part) {
+        if (!empty($part)) {
+            $initials .= strtoupper($part[0]);
+        }
+    }
+    return substr($initials, 0, 2);
+}
+
+// Bepaal de badge kleur op basis van de rol
+function getRoleBadgeClass(string $role): string {
+    return match(strtolower($role)) {
+        'admin'   => 'bg-purple-100 text-purple-700',
+        'user'    => 'bg-gray-100 text-gray-700',
+        default   => 'bg-blue-50 text-blue-700',
+    };
+}
 ?>
 
 <section class="p-6">

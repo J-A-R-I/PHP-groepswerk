@@ -209,6 +209,39 @@ $router->post('/users/{id}/enable', function (int $id) use ($requireAdmin): void
     (new UsersController(UsersRepository::make(), RolesRepository::make()))->enable($id);
 });
 
+// User aanmaken: formulier (GET) en opslaan (POST)
+$router->get('/users/create', function () use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->create();
+});
+
+$router->post('/users/store', function () use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->store();
+});
+
+// User bewerken: formulier (GET) en update (POST)
+$router->get('/users/{id}/edit', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->edit($id);
+});
+
+$router->post('/users/{id}/update', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->update($id);
+});
+
+// User blokkeren/deblokkeren (POST)
+$router->post('/users/{id}/disable', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->disable($id);
+});
+
+$router->post('/users/{id}/enable', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->enable($id);
+});
+
 $router->get('/posts', function () use ($requireAdmin): void {
     $requireAdmin();
     (new PostsController(PostsRepository::make()))->index();

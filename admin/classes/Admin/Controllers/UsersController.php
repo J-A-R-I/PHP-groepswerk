@@ -113,6 +113,7 @@ class UsersController
             'errors' => [],
             'old' => [
                 'name' => (string)$user['name'],
+                'email' => (string)$user['email'],
                 'role_id' => (string)$user['role_id'],
             ],
             'pw_errors' => [],
@@ -134,13 +135,19 @@ class UsersController
         }
 
         $name = trim((string)($_POST['name'] ?? ''));
+        $email = trim((string)($_POST['email'] ?? ''));
         $roleId = (int)($_POST['role_id'] ?? 0);
+        $password = (string)($_POST['password'] ?? '');
 
         $errors = [];
 
         if ($name === '') { $errors[] = 'Naam is verplicht.'; }
-        if ($roleId <= 0) { $errors[] = 'Kies een rol.'; }
+        if ($email === '') { $errors[] = 'Email is verplicht.'; }
+        // Simpele email validatie
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $errors[] = 'Email is ongeldig.'; }
+        if ($roleId <= 0) { $errors[] = 'Kies een geldige rol.'; }
 
+        // Als er fouten zijn, toon formulier opnieuw
         if (!empty($errors)) {
             View::render('user-edit.php', [
                 'title' => 'Gebruiker bewerken',
@@ -149,21 +156,31 @@ class UsersController
                 'errors' => $errors,
                 'old' => [
                     'name' => $name,
+                    'email' => $email,
                     'role_id' => (string)$roleId,
                 ],
-                'pw_errors' => [],
             ]);
             return;
         }
 
-        $this->users->update($id, $name, $roleId);
+        // 1. Basisgegevens updaten
+        $this->users->update($id, $name, $email, $roleId);
+
+        // 2. Wachtwoord updaten (alleen als het veld is ingevuld)
+        if ($password !== '') {
+            $this->users->updatePassword($id, $password);
+        }
 
         Flash::set('Gebruiker bijgewerkt.', 'success');
         header('Location: ' . ADMIN_BASE_PATH . '/users/' . $id . '/edit');
         exit;
     }
 
-    public function resetPassword(int $id): void
+    // Noot: We hebben updatePassword() hier niet meer los nodig,
+    // omdat dit nu in de algemene update() zit.
+    // Ik laat hem weg of commentarieer hem uit.
+
+    public function disable(int $id): void
     {
         if (!Auth::isAdmin()) {
             header('Location: ' . ADMIN_BASE_PATH);
