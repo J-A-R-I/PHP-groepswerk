@@ -5,7 +5,7 @@ return [
     'host' => '127.0.0.1',
     'dbname' => 'tooltrack',
     'user' => 'root',
-    'pass' => 'root',
+    'pass' => '',
     'charset' => 'utf8mb4',
 ];
 

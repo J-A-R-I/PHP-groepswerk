@@ -150,6 +150,7 @@ function statusLabel(string $status): string
                         <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Afbeelding</th>
                         <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Product</th>
                         <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Categorie</th>
+                        <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Voorraad</th>
                         <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Status</th>
                         <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Aangemaakt</th>
                         <th class="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Acties</th>
@@ -161,15 +162,12 @@ function statusLabel(string $status): string
                     <?php foreach ($items as $item): ?>
                         <tr class="hover:bg-gray-50/50 transition-colors duration-150">
 
-                            <!-- Kolom: Afbeelding / Placeholder -->
                             <td class="px-6 py-4">
-                                <?php if (!empty($item['media_filename'])): ?>
-                                    <!-- Bestaande afbeelding tonen -->
-                                    <img src="/<?= htmlspecialchars($item['media_path']) ?>/<?= htmlspecialchars($item['media_filename']) ?>"
+                                <?php if (!empty($item['image_filename'])): ?>
+                                    <img src="/<?= htmlspecialchars($item['image_path']) ?>/<?= htmlspecialchars($item['image_filename']) ?>"
                                          alt="<?= htmlspecialchars($item['name']) ?>"
                                          class="w-10 h-10 rounded-lg object-cover border border-gray-100">
                                 <?php else: ?>
-                                    <!-- Placeholder als er geen afbeelding is -->
                                     <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
                                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -197,7 +195,10 @@ function statusLabel(string $status): string
                                 <?php endif; ?>
                             </td>
 
-                            <!-- Kolom: Status badge (kleurgecodeerd) -->
+                            <td class="px-6 py-4">
+                                <span class="text-sm font-medium text-gray-900"><?= (int)($item['quantity'] ?? 0) ?></span>
+                            </td>
+
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium <?= statusBadgeClass($item['status']) ?>">
                                     <?= statusLabel($item['status']) ?>
