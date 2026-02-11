@@ -23,7 +23,7 @@ class UsersController
     public function index(): void
     {
         if (!Auth::isAdmin()) {
-            header('Location: /admin');
+            header('Location: ' . ADMIN_BASE_PATH);
             exit;
         }
 
@@ -36,7 +36,7 @@ class UsersController
     public function create(): void
     {
         if (!Auth::isAdmin()) {
-            header('Location: /admin');
+            header('Location: ' . ADMIN_BASE_PATH);
             exit;
         }
 
@@ -55,7 +55,7 @@ class UsersController
     public function store(): void
     {
         if (!Auth::isAdmin()) {
-            header('Location: /admin');
+            header('Location: ' . ADMIN_BASE_PATH);
             exit;
         }
 
@@ -88,21 +88,21 @@ class UsersController
         $this->users->create($email, $name, $password, $roleId);
 
         Flash::set('Gebruiker aangemaakt.', 'success');
-        header('Location: /admin/users');
+        header('Location: ' . ADMIN_BASE_PATH . '/users');
         exit;
     }
 
     public function edit(int $id): void
     {
         if (!Auth::isAdmin()) {
-            header('Location: /admin');
+            header('Location: ' . ADMIN_BASE_PATH);
             exit;
         }
 
         $user = $this->users->findById($id);
         if ($user === null) {
             Flash::set('Gebruiker niet gevonden.', 'error');
-            header('Location: /admin/users');
+            header('Location: ' . ADMIN_BASE_PATH . '/users');
             exit;
         }
 
@@ -122,14 +122,14 @@ class UsersController
     public function update(int $id): void
     {
         if (!Auth::isAdmin()) {
-            header('Location: /admin');
+            header('Location: ' . ADMIN_BASE_PATH);
             exit;
         }
 
         $user = $this->users->findById($id);
         if ($user === null) {
             Flash::set('Gebruiker niet gevonden.', 'error');
-            header('Location: /admin/users');
+            header('Location: ' . ADMIN_BASE_PATH . '/users');
             exit;
         }
 
@@ -159,21 +159,21 @@ class UsersController
         $this->users->update($id, $name, $roleId);
 
         Flash::set('Gebruiker bijgewerkt.', 'success');
-        header('Location: /admin/users/' . $id . '/edit');
+        header('Location: ' . ADMIN_BASE_PATH . '/users/' . $id . '/edit');
         exit;
     }
 
     public function resetPassword(int $id): void
     {
         if (!Auth::isAdmin()) {
-            header('Location: /admin');
+            header('Location: ' . ADMIN_BASE_PATH);
             exit;
         }
 
         $user = $this->users->findById($id);
         if ($user === null) {
             Flash::set('Gebruiker niet gevonden.', 'error');
-            header('Location: /admin/users');
+            header('Location: ' . ADMIN_BASE_PATH . '/users');
             exit;
         }
 
@@ -204,35 +204,35 @@ class UsersController
         $this->users->updatePassword($id, $password);
 
         Flash::set('Wachtwoord gereset.', 'success');
-        header('Location: /admin/users/' . $id . '/edit');
+        header('Location: ' . ADMIN_BASE_PATH . '/users/' . $id . '/edit');
         exit;
     }
 
     public function disable(int $id): void
     {
         if (!Auth::isAdmin()) {
-            header('Location: /admin');
+            header('Location: ' . ADMIN_BASE_PATH);
             exit;
         }
 
         $this->users->disable($id);
 
         Flash::set('Gebruiker geblokkeerd.', 'success');
-        header('Location: /admin/users/' . $id . '/edit');
+        header('Location: ' . ADMIN_BASE_PATH . '/users/' . $id . '/edit');
         exit;
     }
 
     public function enable(int $id): void
     {
         if (!Auth::isAdmin()) {
-            header('Location: /admin');
+            header('Location: ' . ADMIN_BASE_PATH);
             exit;
         }
 
         $this->users->enable($id);
 
         Flash::set('Gebruiker geactiveerd.', 'success');
-        header('Location: /admin/users/' . $id . '/edit');
+        header('Location: ' . ADMIN_BASE_PATH . '/users/' . $id . '/edit');
         exit;
     }
 }

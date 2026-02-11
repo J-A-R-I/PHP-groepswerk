@@ -17,7 +17,7 @@ declare(strict_types=1);
             </div>
         <?php endif; ?>
 
-        <form method="post" action="/admin/users/store" class="space-y-4">
+        <form method="post" action="<?= ADMIN_BASE_PATH ?>/users/store" class="space-y-4">
             <div>
                 <label class="block text-sm font-bold mb-1" for="email">Email</label>
                 <input class="w-full border rounded p-2" type="email" id="email" name="email"
@@ -52,7 +52,7 @@ declare(strict_types=1);
 
             <div class="flex gap-4">
                 <button class="border rounded px-4 py-2" type="submit">Aanmaken</button>
-                <a class="underline" href="/admin/users">Annuleren</a>
+                <a class="underline" href="<?= ADMIN_BASE_PATH ?>/users">Annuleren</a>
             </div>
         </form>
     </div>

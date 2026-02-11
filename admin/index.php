@@ -14,6 +14,7 @@ use Admin\Controllers\MediaController;
 use Admin\Controllers\PostsController;
 use Admin\Controllers\UsersController;
 use Admin\Controllers\ReservationsController;
+use Admin\Controllers\ActivityLogsController;
 use Admin\Core\Auth;
 use Admin\Core\Router;
 use Admin\Models\StatsModel;
@@ -24,6 +25,7 @@ use Admin\Repositories\PostsRepository;
 use Admin\Repositories\RolesRepository;
 use Admin\Repositories\UsersRepository;
 use Admin\Repositories\ReservationsRepository;
+use Admin\Repositories\ActivityLogsRepository;
 
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
@@ -35,7 +37,7 @@ if (str_starts_with($uri, ADMIN_BASE_PATH)) {
 $uri = rtrim($uri, '/') ?: '/';
 
 
-$publicRoutes = ['/']; // /login
+$publicRoutes = ['/']; 
 
 if (!Auth::check() && !in_array($uri, $publicRoutes, true)) {
     header('Location: ' . ADMIN_BASE_PATH . '/');
@@ -70,7 +72,9 @@ $router->get('/items', function () use ($requireAdmin): void {
     $requireAdmin();
     (new ItemsController(
         ItemsRepository::make(),
-        CategoriesRepository::make()
+        CategoriesRepository::make(),
+        null,
+        ActivityLogsRepository::make()
     ))->index();
 });
 
@@ -89,7 +93,8 @@ $router->post('/items/store', function () use ($requireAdmin): void {
     (new ItemsController(
         ItemsRepository::make(),
         CategoriesRepository::make(),
-        MediaRepository::make()
+        MediaRepository::make(),
+        ActivityLogsRepository::make()
     ))->store();
 });
 
@@ -108,14 +113,20 @@ $router->post('/items/{id}/update', function (int $id) use ($requireAdmin): void
     (new ItemsController(
         ItemsRepository::make(),
         CategoriesRepository::make(),
-        MediaRepository::make()
+        MediaRepository::make(),
+        ActivityLogsRepository::make()
     ))->update($id);
 });
 
 // Item verwijderen (POST voor veiligheid)
 $router->post('/items/{id}/delete', function (int $id) use ($requireAdmin): void {
     $requireAdmin();
-    (new ItemsController(ItemsRepository::make()))->delete($id);
+    (new ItemsController(
+        ItemsRepository::make(),
+        null,
+        null,
+        ActivityLogsRepository::make()
+    ))->delete($id);
 });
 
 // Placeholder route: categorieën overzicht
@@ -124,6 +135,17 @@ $router->get('/categories', function () use ($requireAdmin): void {
     \Admin\Core\View::render('categories.php', [
         'title' => 'Categorieën',
     ]);
+});
+
+// Activity Logs routes
+$router->get('/activity-logs', function () use ($requireAdmin): void {
+    $requireAdmin();
+    (new ActivityLogsController(ActivityLogsRepository::make()))->index();
+});
+
+$router->post('/activity-logs/{id}/revert', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new ActivityLogsController(ActivityLogsRepository::make()))->revert($id);
 });
 
 // Reserveringen routes
@@ -147,21 +169,44 @@ $router->post('/reservations/{id}/delete', function (int $id) use ($requireAdmin
     (new ReservationsController(ReservationsRepository::make()))->delete($id);
 });
 
-$router->get('/login', function (): void {
-    (new AuthController(UsersRepository::make()))->showLogin();
-});
-
-$router->post('/login', function (): void {
-    (new AuthController(UsersRepository::make()))->login();
-});
-
-$router->post('/logout', function (): void {
-    (new AuthController(UsersRepository::make()))->logout();
-});
-
 $router->get('/users', function () use ($requireAdmin): void {
     $requireAdmin();
     (new UsersController(UsersRepository::make(), RolesRepository::make()))->index();
+});
+
+$router->get('/users/create', function () use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->create();
+});
+
+$router->post('/users/store', function () use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->store();
+});
+
+$router->get('/users/{id}/edit', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->edit($id);
+});
+
+$router->post('/users/{id}/update', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->update($id);
+});
+
+$router->post('/users/{id}/reset-password', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->resetPassword($id);
+});
+
+$router->post('/users/{id}/disable', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->disable($id);
+});
+
+$router->post('/users/{id}/enable', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new UsersController(UsersRepository::make(), RolesRepository::make()))->enable($id);
 });
 
 $router->get('/posts', function () use ($requireAdmin): void {

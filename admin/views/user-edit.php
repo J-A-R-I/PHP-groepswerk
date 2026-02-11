@@ -11,7 +11,7 @@ $isActive = ((int)($user['is_active'] ?? 0) === 1);
     <div class="bg-white p-6 rounded shadow max-w-2xl">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-bold">Gebruiker bewerken</h2>
-            <a class="underline" href="/admin/users">Terug naar overzicht</a>
+            <a class="underline" href="<?= ADMIN_BASE_PATH ?>/users">Terug naar overzicht</a>
         </div>
 
         <div class="mb-6 text-sm space-y-1">
@@ -31,7 +31,7 @@ $isActive = ((int)($user['is_active'] ?? 0) === 1);
             </div>
         <?php endif; ?>
 
-        <form method="post" action="/admin/users/<?php echo (int)$user['id']; ?>/update" class="space-y-4">
+        <form method="post" action="<?= ADMIN_BASE_PATH ?>/users/<?php echo (int)$user['id']; ?>/update" class="space-y-4">
             <div>
                 <label class="block text-sm font-bold mb-1" for="email">Email (readonly)</label>
                 <input class="w-full border rounded p-2 bg-gray-100" type="email" id="email"
@@ -60,7 +60,7 @@ $isActive = ((int)($user['is_active'] ?? 0) === 1);
 
             <div class="flex gap-4">
                 <button class="border rounded px-4 py-2" type="submit">Opslaan</button>
-                <a class="underline" href="/admin/users">Annuleren</a>
+                <a class="underline" href="<?= ADMIN_BASE_PATH ?>/users">Annuleren</a>
             </div>
         </form>
 
@@ -79,7 +79,7 @@ $isActive = ((int)($user['is_active'] ?? 0) === 1);
             </div>
         <?php endif; ?>
 
-        <form method="post" action="/admin/users/<?php echo (int)$user['id']; ?>/reset-password" class="space-y-4">
+        <form method="post" action="<?= ADMIN_BASE_PATH ?>/users/<?php echo (int)$user['id']; ?>/reset-password" class="space-y-4">
             <div>
                 <label class="block text-sm font-bold mb-1" for="password">Nieuw wachtwoord</label>
                 <input class="w-full border rounded p-2" type="password" id="password" name="password" autocomplete="new-password">
@@ -101,11 +101,11 @@ $isActive = ((int)($user['is_active'] ?? 0) === 1);
         <h3 class="text-lg font-bold mb-3">Status beheren</h3>
 
         <?php if ($isActive): ?>
-            <form method="post" action="/admin/users/<?php echo (int)$user['id']; ?>/disable">
+            <form method="post" action="<?= ADMIN_BASE_PATH ?>/users/<?php echo (int)$user['id']; ?>/disable">
                 <button class="underline text-red-600" type="submit">Blokkeer gebruiker</button>
             </form>
         <?php else: ?>
-            <form method="post" action="/admin/users/<?php echo (int)$user['id']; ?>/enable">
+            <form method="post" action="<?= ADMIN_BASE_PATH ?>/users/<?php echo (int)$user['id']; ?>/enable">
                 <button class="underline text-green-700" type="submit">Deblokkeer gebruiker</button>
             </form>
         <?php endif; ?>
