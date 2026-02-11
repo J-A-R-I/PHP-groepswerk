@@ -13,6 +13,7 @@ use Admin\Controllers\ItemsController;
 use Admin\Controllers\MediaController;
 use Admin\Controllers\PostsController;
 use Admin\Controllers\UsersController;
+use Admin\Controllers\ReservationsController;
 use Admin\Core\Auth;
 use Admin\Core\Router;
 use Admin\Models\StatsModel;
@@ -22,6 +23,7 @@ use Admin\Repositories\MediaRepository;
 use Admin\Repositories\PostsRepository;
 use Admin\Repositories\RolesRepository;
 use Admin\Repositories\UsersRepository;
+use Admin\Repositories\ReservationsRepository;
 
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
@@ -124,12 +126,25 @@ $router->get('/categories', function () use ($requireAdmin): void {
     ]);
 });
 
-// Placeholder route: reserveringen overzicht
+// Reserveringen routes
 $router->get('/reservations', function () use ($requireAdmin): void {
     $requireAdmin();
-    \Admin\Core\View::render('reservations.php', [
-        'title' => 'Reserveringen',
-    ]);
+    (new ReservationsController(ReservationsRepository::make()))->index();
+});
+
+$router->get('/reservations/{id}/edit', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new ReservationsController(ReservationsRepository::make()))->edit($id);
+});
+
+$router->post('/reservations/{id}/update', function (int $id) use ($requireAdmin): void {
+    $requireAdmin();
+    (new ReservationsController(ReservationsRepository::make()))->update($id);
+});
+
+$router->post('/reservations/{id}/delete', function (int $id) use ($requireAdmin): void {
+    //$requireAdmin();
+    (new ReservationsController(ReservationsRepository::make()))->delete($id);
 });
 
 $router->get('/login', function (): void {

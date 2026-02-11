@@ -19,6 +19,7 @@ use Admin\Core\Database;
 use Admin\Core\Auth;
 use Admin\Repositories\ItemsRepository;
 use Admin\Repositories\UsersRepository;
+use Admin\Repositories\ReservationsRepository;
 
 // 1) URL Parsing
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
@@ -28,8 +29,9 @@ $uri = rtrim($uri, '/') ?: '/';
 $pdo = Database::getConnection();
 
 // 3) Repositories
-$itemsRepo = new ItemsRepository($pdo);
-$usersRepo = new UsersRepository($pdo);
+$itemsRepo        = new ItemsRepository($pdo);
+$usersRepo        = new UsersRepository($pdo);
+$reservationsRepo = new ReservationsRepository($pdo);
 
 // 4) Routing
 switch ($uri) {
@@ -46,11 +48,7 @@ switch ($uri) {
 
     case '/login':
         if (Auth::check()) {
-            if (Auth::isAdmin()) {
-                header('Location: /');
-            } else {
-                header('Location: /');
-            }
+            header('Location: /');
             exit;
         }
 
@@ -60,34 +58,25 @@ switch ($uri) {
 
             $user = $usersRepo->findByEmail($email);
 
-            // Wachtwoord verificatie (werkt met password_hash uit database)
             if ($user && password_verify($password, (string)$user['password_hash'])) {
                 if ((int)$user['is_active'] !== 1) {
                     $error = "Dit account is gedeactiveerd.";
                 } else {
                     session_regenerate_id(true);
-
                     $_SESSION['user_id'] = (int)$user['id'];
                     $_SESSION['user_role'] = (string)$user['role_name'];
                     $_SESSION['user_name'] = (string)$user['name'];
-
-                    if ($user['role_name'] === 'admin') {
-                        header('Location: /');
-                    } else {
-                        header('Location: /');
-                    }
+                    header('Location: /');
                     exit;
                 }
             } else {
                 $error = "E-mailadres of wachtwoord is onjuist.";
             }
         }
-
         require __DIR__ . '/views/auth/login.php';
         break;
 
     case '/register':
-        // Registratie Logica
         if (Auth::check()) {
             header('Location: /');
             exit;
@@ -98,23 +87,16 @@ switch ($uri) {
             $email = trim((string)($_POST['email'] ?? ''));
             $password = (string)($_POST['password'] ?? '');
 
-            // Validatie
             if (empty($name) || empty($email) || empty($password)) {
                 $error = "Alle velden zijn verplicht.";
             } elseif ($usersRepo->findByEmail($email)) {
                 $error = "Er bestaat al een account met dit e-mailadres.";
             } else {
-                // Maak gebruiker aan.
-                // We geven rol ID 2 mee (Standaard User/Student).
-                // De repository hashed het wachtwoord automatisch.
                 $usersRepo->create($email, $name, $password, 2);
-
-                // Optioneel: Direct inloggen of doorsturen naar login
-                header('Location: /login'); // Stuur naar login met succesbericht (kan via flash session)
+                header('Location: /login');
                 exit;
             }
         }
-
         require __DIR__ . '/views/auth/register.php';
         break;
 
@@ -128,9 +110,92 @@ switch ($uri) {
         $items = $itemsRepo->getAll();
         $categories = $itemsRepo->getCategoryStats();
         $featured = null;
-
         $title = 'Catalogus - ToolTrack';
         require __DIR__ . '/views/posts/home.php';
+        break;
+
+    // === NIEUWE ROUTE: RESERVEREN ===
+    case '/reserve':
+        // 1. Auth check
+        if (!Auth::check()) {
+            header('Location: /login');
+            exit;
+        }
+
+        // 2. Item ophalen
+        $itemId = isset($_GET['item_id']) ? (int)$_GET['item_id'] : (int)($_POST['item_id'] ?? 0);
+        $item = $itemsRepo->find($itemId);
+
+        if (!$item || $item['status'] !== 'available') {
+            http_response_code(404);
+            echo "Item niet gevonden of niet beschikbaar.";
+            exit;
+        }
+
+        $error = null;
+
+        // --- SLIMME DATUM LOGICA ---
+        // Bepaal standaard startdatum (volgende werkdag indien na 17:00 of weekend)
+        $defaultStart = date('Y-m-d');
+        $currentHour  = (int)date('H');
+        $dayOfWeek    = (int)date('N'); // 1 (ma) tot 7 (zo)
+
+        // Als het na 17:00 is, of zaterdag(6)/zondag(7)
+        if ($currentHour >= 17 || $dayOfWeek >= 6) {
+            $d = new DateTime();
+            $d->modify('+1 day'); // Eerstvolgende dag
+            // Zolang het weekend is, doorschuiven
+            while ($d->format('N') >= 6) {
+                $d->modify('+1 day');
+            }
+            $defaultStart = $d->format('Y-m-d');
+        }
+        // ---------------------------
+
+        // 3. Formulier verwerking (POST)
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $startDate = (string)($_POST['start_date'] ?? $defaultStart);
+            $endDate   = (string)($_POST['end_date'] ?? '');
+            $quantity  = (int)($_POST['quantity'] ?? 1); // Aantal ophalen
+            $remarks   = trim((string)($_POST['remarks'] ?? ''));
+
+            // Validatie
+            $startTs = strtotime($startDate);
+            $endTs   = strtotime($endDate);
+            $nowTs   = strtotime(date('Y-m-d'));
+
+            if (!$startTs || !$endTs) {
+                $error = "Ongeldige datums ingevoerd.";
+            } elseif ($startTs < $nowTs) {
+                $error = "Startdatum kan niet in het verleden liggen.";
+            } elseif ($endTs < $startTs) {
+                $error = "Einddatum moet na de startdatum liggen.";
+            } else {
+                // Beschikbaarheid checken (rekening houdend met voorraad)
+                $available = $reservationsRepo->getAvailableQuantity($itemId, $startDate, $endDate);
+
+                if ($available < $quantity) {
+                    $error = "Niet genoeg voorraad. Er zijn er nog maar {$available} beschikbaar in deze periode.";
+                } else {
+                    // Aanmaken
+                    $reservationsRepo->create(
+                        (int)$_SESSION['user_id'],
+                        $itemId,
+                        $quantity,
+                        $startDate,
+                        $endDate,
+                        $remarks
+                    );
+
+                    header('Location: /catalogus?success=reserved');
+                    exit;
+                }
+            }
+        }
+
+        // 4. View tonen
+        $title = 'Reserveer ' . $item['name'];
+        require __DIR__ . '/views/posts/reservatie-create.php';
         break;
 
     default:

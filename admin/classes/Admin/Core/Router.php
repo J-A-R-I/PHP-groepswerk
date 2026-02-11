@@ -105,7 +105,8 @@ class Router
         foreach ($this->routes[$method] as $route) {
             if (preg_match($route['pattern'], $uri, $matches)) {
                 array_shift($matches);
-                call_user_func_array($route['handler'], $matches);
+                $params = array_map(static fn(string $v): int => (int) $v, $matches);
+                call_user_func_array($route['handler'], $params);
                 return;
             }
         }

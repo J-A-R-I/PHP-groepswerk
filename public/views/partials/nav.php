@@ -16,8 +16,6 @@ use Admin\Core\Auth;
 
         <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
             <a href="/catalogus" class="hover:text-gray-900 transition">Catalogus</a>
-            <a href="#" class="hover:text-gray-900 transition">Hoe werkt het?</a>
-            <a href="#" class="hover:text-gray-900 transition">Contact</a>
         </div>
 
         <div>
