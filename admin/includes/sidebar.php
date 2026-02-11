@@ -62,7 +62,7 @@ $sidebarUserName = $_SESSION['user_name'] ?? 'Admin';
     <div class="p-5">
 
         <!-- ToolTrack logo: identiek aan de publieke navigatiebalk -->
-        <a href="/" class="flex items-center gap-2 group mb-4">
+        <a href="<?= ADMIN_BASE_PATH ?>" class="flex items-center gap-2 group mb-4">
             <div class="w-8 h-8 bg-white border-2 border-gray-900 rounded flex items-center justify-center text-gray-900 group-hover:bg-gray-900 group-hover:text-white transition">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
             </div>
@@ -133,9 +133,18 @@ $sidebarUserName = $_SESSION['user_name'] ?? 'Admin';
 
     <!-- Uitloggen link onderaan de sidebar -->
     <div class="p-4 mt-auto">
+        <!-- Naar Website Link -->
+        <a href="/" target="_blank"
+           class="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 text-sm transition-colors mb-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+            Naar website
+        </a>
+        
         <form action="<?= ADMIN_BASE_PATH ?>/logout" method="POST">
             <button type="submit"
-                    class="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 text-sm transition-colors">
+                    class="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 text-sm transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round"
                           d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
