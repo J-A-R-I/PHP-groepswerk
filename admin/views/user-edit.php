@@ -16,7 +16,12 @@ $errors = $errors ?? [];
 $old    = $old ?? [];
 ?>
 
-<section class="p-6 lg:p-8">
+<section class="p-6">
+    <div class="bg-white p-6 rounded shadow max-w-2xl">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold">Gebruiker bewerken</h2>
+            <a class="underline" href="<?= ADMIN_BASE_PATH ?>/users">Terug naar overzicht</a>
+        </div>
 
     <!-- Paginakop -->
     <div class="mb-6">
@@ -49,9 +54,12 @@ $old    = $old ?? [];
         </div>
     <?php endif; ?>
 
-    <!-- Formulier -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <form action="/admin/users/<?= (int)$user['id'] ?>/update" method="POST" class="p-6 lg:p-8 space-y-6">
+        <form method="post" action="<?= ADMIN_BASE_PATH ?>/users/<?php echo (int)$user['id']; ?>/update" class="space-y-4">
+            <div>
+                <label class="block text-sm font-bold mb-1" for="email">Email (readonly)</label>
+                <input class="w-full border rounded p-2 bg-gray-100" type="email" id="email"
+                       value="<?php echo htmlspecialchars($email, ENT_QUOTES); ?>" disabled>
+            </div>
 
             <!-- Naam -->
             <div>
@@ -79,34 +87,25 @@ $old    = $old ?? [];
                        class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all duration-200">
             </div>
 
-            <!-- Rol -->
-            <div>
-                <label for="role_id" class="block text-sm font-medium text-gray-700 mb-1.5">
-                    Rol <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                    <select id="role_id" 
-                            name="role_id" 
-                            required
-                            class="block w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all duration-200">
-                        <?php foreach ($roles as $role): ?>
-                            <option value="<?= (int)$role['id'] ?>" 
-                                <?= ((string)($old['role_id'] ?? '') === (string)$role['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($role['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                        </svg>
-                    </div>
-                </div>
+            <div class="flex gap-4">
+                <button class="border rounded px-4 py-2" type="submit">Opslaan</button>
+                <a class="underline" href="<?= ADMIN_BASE_PATH ?>/users">Annuleren</a>
             </div>
 
             <hr class="border-gray-100 my-6">
 
-            <!-- Wachtwoord (Optioneel) -->
+        <?php if (!empty($pw_errors)): ?>
+            <div class="mb-4 p-4 border border-red-200 bg-red-50 rounded">
+                <p class="font-bold mb-2">Controleer je invoer:</p>
+                <ul class="list-disc pl-6">
+                    <?php foreach ($pw_errors as $error): ?>
+                        <li><?php echo htmlspecialchars((string)$error, ENT_QUOTES); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+        <form method="post" action="<?= ADMIN_BASE_PATH ?>/users/<?php echo (int)$user['id']; ?>/reset-password" class="space-y-4">
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">
                     Nieuw Wachtwoord
@@ -138,6 +137,20 @@ $old    = $old ?? [];
             </div>
 
         </form>
+
+        <hr class="my-8">
+
+        <h3 class="text-lg font-bold mb-3">Status beheren</h3>
+
+        <?php if ($isActive): ?>
+            <form method="post" action="<?= ADMIN_BASE_PATH ?>/users/<?php echo (int)$user['id']; ?>/disable">
+                <button class="underline text-red-600" type="submit">Blokkeer gebruiker</button>
+            </form>
+        <?php else: ?>
+            <form method="post" action="<?= ADMIN_BASE_PATH ?>/users/<?php echo (int)$user['id']; ?>/enable">
+                <button class="underline text-green-700" type="submit">Deblokkeer gebruiker</button>
+            </form>
+        <?php endif; ?>
     </div>
 
 </section>

@@ -8,6 +8,7 @@ use Admin\Core\View;
 use Admin\Repositories\CategoriesRepository;
 use Admin\Repositories\ItemsRepository;
 use Admin\Repositories\MediaRepository;
+use Admin\Repositories\ActivityLogsRepository;
 use Admin\Core\Database;
 
 /**
@@ -22,6 +23,7 @@ class ItemsController
     private ItemsRepository $itemsRepository;
     private ?CategoriesRepository $categoriesRepository;
     private ?MediaRepository $mediaRepository;
+    private ActivityLogsRepository $logsRepo;
     private string $title = 'Items Beheer';
 
     /**
@@ -34,11 +36,13 @@ class ItemsController
     public function __construct(
         ItemsRepository $itemsRepository,
         ?CategoriesRepository $categoriesRepository = null,
-        ?MediaRepository $mediaRepository = null
+        ?MediaRepository $mediaRepository = null,
+        ?ActivityLogsRepository $logsRepo = null
     ) {
         $this->itemsRepository = $itemsRepository;
         $this->categoriesRepository = $categoriesRepository;
         $this->mediaRepository = $mediaRepository;
+        $this->logsRepo = $logsRepo ?? ActivityLogsRepository::make();
     }
 
     /**
@@ -266,7 +270,7 @@ class ItemsController
                 );
             }
 
-            $this->itemsRepository->create(
+            $itemId = $this->itemsRepository->create(
                 $name,
                 $brand !== '' ? $brand : null,
                 $description,
@@ -274,6 +278,22 @@ class ItemsController
                 $categoryId !== '' ? (int)$categoryId : null,
                 $status,
                 $mediaId
+            );
+
+            // Log action
+            $this->logsRepo->log(
+                (int)($_SESSION['user_id'] ?? 0),
+                'create',
+                'item',
+                $itemId,
+                null,
+                [
+                    'name' => $name,
+                    'brand' => $brand,
+                    'quantity' => $quantity,
+                    'category_id' => $categoryId,
+                    'status' => $status
+                ]
             );
 
             // Alles gelukt: transactie bevestigen
@@ -501,6 +521,17 @@ class ItemsController
                 );
             }
 
+            // Get old data for logging
+            $oldDataForLog = [
+                'name' => $item['name'],
+                'brand' => $item['brand'],
+                'description' => $item['description'],
+                'quantity' => $item['quantity'],
+                'category_id' => $item['category_id'],
+                'status' => $item['status'],
+                'featured_media_id' => $item['featured_media_id']
+            ];
+
             $this->itemsRepository->update(
                 $id,
                 $name,
@@ -510,6 +541,24 @@ class ItemsController
                 $categoryId !== '' ? (int)$categoryId : null,
                 $status,
                 $mediaId
+            );
+
+            // Log action
+            $this->logsRepo->log(
+                (int)($_SESSION['user_id'] ?? 0),
+                'update',
+                'item',
+                $id,
+                $oldDataForLog,
+                [
+                    'name' => $name,
+                    'brand' => $brand,
+                    'description' => $description,
+                    'quantity' => $quantity,
+                    'category_id' => $categoryId,
+                    'status' => $status,
+                    'featured_media_id' => $mediaId
+                ]
             );
 
             $pdo->commit();
@@ -556,6 +605,16 @@ class ItemsController
             header('Location: ' . ADMIN_BASE_PATH . '/items');
             exit;
         }
+
+        // Log action (capture data before delete)
+        $this->logsRepo->log(
+            (int)($_SESSION['user_id'] ?? 0),
+            'delete',
+            'item',
+            $id,
+            $item, // Full old data
+            null
+        );
 
         $this->itemsRepository->delete($id);
 
