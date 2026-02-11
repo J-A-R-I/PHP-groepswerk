@@ -28,12 +28,22 @@ final class ItemsRepository
                     i.featured_media_id, 
                     i.name, 
                     i.brand, 
-                    i.description, 
+                    i.description,
+                    i.quantity, 
                     i.status, 
                     i.created_at,
                     c.name as category_name, 
+                    c.name as category_name, 
                     m.filename as image_filename,
-                    m.path as image_path
+                    m.path as image_path,
+                    GREATEST(0, i.quantity - (
+                        SELECT COALESCE(SUM(r.quantity), 0)
+                        FROM reservations r
+                        WHERE r.item_id = i.id
+                          AND r.status NOT IN ('rejected', 'returned', 'cancelled')
+                          AND r.start_date <= CURDATE()
+                          AND r.end_date >= CURDATE()
+                    )) as available_stock
                 FROM items i
                 LEFT JOIN categories c ON i.category_id = c.id
                 LEFT JOIN media m ON i.featured_media_id = m.id
@@ -43,20 +53,6 @@ final class ItemsRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
-    /**
-     * getFiltered()
-     *
-     * Doel:
-     * Haalt items op met optionele filters voor categorie en status.
-     * Bouwt dynamisch WHERE-clausules op basis van de meegegeven parameters.
-     *
-     * Parameters:
-     * - $categoryId: optioneel categorie-filter (null = alle categorieën)
-     * - $status: optioneel status-filter (null = alle statussen)
-     *
-     * Resultaat:
-     * Array met items, inclusief categorie-naam en media-gegevens via JOINs.
-     */
     public function getFiltered(?int $categoryId = null, ?string $status = null): array
     {
         $sql = "SELECT 
@@ -65,7 +61,8 @@ final class ItemsRepository
                     i.featured_media_id, 
                     i.name, 
                     i.brand, 
-                    i.description, 
+                    i.description,
+                    i.quantity, 
                     i.status, 
                     i.created_at,
                     c.name as category_name, 
@@ -75,7 +72,6 @@ final class ItemsRepository
                 LEFT JOIN categories c ON i.category_id = c.id
                 LEFT JOIN media m ON i.featured_media_id = m.id";
 
-        // Dynamische WHERE-clausules opbouwen
         $conditions = [];
         $params     = [];
 
@@ -100,14 +96,21 @@ final class ItemsRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
-
     public function find(int $id): ?array
     {
         $sql = "SELECT 
                     i.*, 
                     c.name as category_name, 
                     m.filename as image_filename,
-                    m.path as image_path
+                    m.path as image_path,
+                    GREATEST(0, i.quantity - (
+                        SELECT COALESCE(SUM(r.quantity), 0)
+                        FROM reservations r
+                        WHERE r.item_id = i.id
+                          AND r.status NOT IN ('rejected', 'returned', 'cancelled')
+                          AND r.start_date <= CURDATE()
+                          AND r.end_date >= CURDATE()
+                    )) as available_stock
                 FROM items i
                 LEFT JOIN categories c ON i.category_id = c.id
                 LEFT JOIN media m ON i.featured_media_id = m.id
@@ -127,7 +130,15 @@ final class ItemsRepository
                     i.*, 
                     c.name as category_name, 
                     m.filename as image_filename,
-                    m.path as image_path
+                    m.path as image_path,
+                    GREATEST(0, i.quantity - (
+                        SELECT COALESCE(SUM(r.quantity), 0)
+                        FROM reservations r
+                        WHERE r.item_id = i.id
+                          AND r.status NOT IN ('rejected', 'returned', 'cancelled')
+                          AND r.start_date <= CURDATE()
+                          AND r.end_date >= CURDATE()
+                    )) as available_stock
                 FROM items i
                 LEFT JOIN categories c ON i.category_id = c.id
                 LEFT JOIN media m ON i.featured_media_id = m.id
@@ -154,16 +165,17 @@ final class ItemsRepository
         return $stmt->fetchAll(PDO::FETCH_KEY_PAIR) ?: [];
     }
 
-    public function create(string $name, ?string $brand, string $description, ?int $categoryId, string $status, ?int $featuredMediaId): int
+    public function create(string $name, ?string $brand, string $description, int $quantity, ?int $categoryId, string $status, ?int $featuredMediaId): int
     {
-        $sql = "INSERT INTO items (name, brand, description, category_id, status, featured_media_id, created_at)
-                VALUES (:name, :brand, :description, :cat_id, :status, :media_id, NOW())";
+        $sql = "INSERT INTO items (name, brand, description, quantity, category_id, status, featured_media_id, created_at)
+                VALUES (:name, :brand, :description, :quantity, :cat_id, :status, :media_id, NOW())";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             'name'        => $name,
             'brand'       => $brand,
             'description' => $description,
+            'quantity'    => $quantity,
             'cat_id'      => $categoryId,
             'status'      => $status,
             'media_id'    => $featuredMediaId
@@ -172,12 +184,13 @@ final class ItemsRepository
         return (int)$this->pdo->lastInsertId();
     }
 
-    public function update(int $id, string $name, ?string $brand, string $description, ?int $categoryId, string $status, ?int $featuredMediaId): void
+    public function update(int $id, string $name, ?string $brand, string $description, int $quantity, ?int $categoryId, string $status, ?int $featuredMediaId): void
     {
         $sql = "UPDATE items 
                 SET name = :name, 
                     brand = :brand, 
                     description = :description, 
+                    quantity = :quantity, 
                     category_id = :cat_id, 
                     status = :status, 
                     featured_media_id = :media_id,
@@ -190,6 +203,7 @@ final class ItemsRepository
             'name'        => $name,
             'brand'       => $brand,
             'description' => $description,
+            'quantity'    => $quantity,
             'cat_id'      => $categoryId,
             'status'      => $status,
             'media_id'    => $featuredMediaId

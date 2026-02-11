@@ -74,53 +74,10 @@ if (!function_exists('getStatusBadge')) {
 
     <div class="grid lg:grid-cols-4 gap-6 mb-8">
 
-        <?php if ($featured): ?>
-            <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 group hover:shadow-md transition">
-                <div class="w-full md:w-1/2 relative">
-                    <div class="aspect-w-4 aspect-h-3 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
-                        <?php if(!empty($featured['image_filename'])): ?>
-                            <img src="uploads/<?= htmlspecialchars($featured['image_filename']) ?>"
-                                 alt="<?= htmlspecialchars($featured['name']) ?>"
-                                 class="object-contain w-full h-full p-4 transition-transform duration-500 group-hover:scale-110">
-                        <?php else: ?>
-                            <span class="text-gray-400 text-sm">Geen afbeelding</span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="absolute top-2 left-2">
-                        <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">NIEUW</span>
-                    </div>
-                </div>
-                <div class="w-full md:w-1/2 flex flex-col h-full justify-center">
-                    <div class="text-xs font-bold text-blue-600 uppercase tracking-wide mb-1">Uitgelicht</div>
-                    <h2 class="text-xl font-bold text-gray-900 mb-2 leading-tight"><?= htmlspecialchars($featured['name']) ?></h2>
 
-                    <div class="mb-3">
-                        <?= getStatusBadge($featured['status'], $statusConfig) ?>
-                    </div>
-
-                    <p class="text-sm text-gray-500 mb-6 line-clamp-2"><?= htmlspecialchars($featured['brand'] ?? '') ?> - <?= htmlspecialchars($featured['description'] ?? '') ?></p>
-
-                    <button class="bg-gray-900 hover:bg-gray-800 text-white font-medium px-5 py-2.5 rounded-lg transition w-full shadow-lg shadow-gray-200">
-                        Nu Reserveren
-                    </button>
-                </div>
-            </div>
-        <?php endif; ?>
 
         <?php
-        $counter = 0;
-        // Bepaal max aantal items (4 op home, alles op catalogus)
-        $maxItems = ($featured) ? 2 : 999; // Op home 2 items naast de featured (totaal 3 colums in row 1? Nee grid is 4)
-        // Correctie: Grid is cols-4. Featured neemt 2 in. Dus nog 2 plekken op rij 1.
-        // Laten we gewoon een mooie grid maken.
-
         foreach ($items as $item):
-            // Skip featured
-            if ($featured && $item['id'] === $featured['id']) continue;
-
-            // Op home pagina max X items tonen, op catalogus alles
-            if ($featured && $counter >= 6) break;
-            $counter++;
             ?>
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col h-full group hover:shadow-lg transition-all duration-300 relative">
 
@@ -137,8 +94,8 @@ if (!function_exists('getStatusBadge')) {
 
                     <div class="absolute top-2 right-2">
                  <span class="flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 <?= $item['status'] === 'available' ? 'bg-green-400' : 'hidden' ?>"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 <?= $item['status'] === 'available' ? 'bg-green-500' : ($item['status'] === 'maintenance' ? 'bg-orange-400' : 'bg-gray-400') ?>"></span>
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 <?= ($item['status'] === 'available' && (int)$item['available_stock'] > 0) ? 'bg-green-400' : 'hidden' ?>"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 <?= ($item['status'] === 'available' && (int)$item['available_stock'] > 0) ? 'bg-green-500' : ($item['status'] === 'maintenance' ? 'bg-orange-400' : 'bg-red-400') ?>"></span>
                   </span>
                     </div>
                 </div>
@@ -153,12 +110,21 @@ if (!function_exists('getStatusBadge')) {
                     <p class="text-sm text-gray-500 mb-3 truncate"><?= htmlspecialchars($item['brand'] ?? '') ?></p>
 
                     <div class="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between gap-2">
-                        <?= getStatusBadge($item['status'], $statusConfig) ?>
+                        <?php if ((int)$item['available_stock'] <= 0): ?>
+                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-600">
+                                0 op voorraad
+                            </span>
+                        <?php else: ?>
+                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700">
+                                <?= (int)$item['available_stock'] ?> beschikbaar
+                            </span>
+                        <?php endif; ?>
 
                         <?php if ($item['status'] === 'available'): ?>
-                            <button class="text-blue-600 hover:text-blue-800 text-sm font-medium transition">
+                            <a href="/reserve?item_id=<?= (int)$item['id'] ?>" 
+                               class="text-blue-600 hover:text-blue-800 text-sm font-medium transition <?= (int)$item['available_stock'] <= 0 ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' ?>">
                                 Reserveer &rarr;
-                            </button>
+                            </a>
                         <?php else: ?>
                             <span class="text-gray-300 text-sm">Unavailable</span>
                         <?php endif; ?>

@@ -138,19 +138,19 @@ class ItemsController
         $brand       = trim((string)($_POST['brand'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
         $categoryId  = $_POST['category_id'] ?? '';
+        $quantity    = (int)($_POST['quantity'] ?? 1);
         $status      = trim((string)($_POST['status'] ?? 'available'));
 
-        // Oude invoer bewaren voor het geval de validatie faalt
         $oldData = [
             'name'        => $name,
             'brand'       => $brand,
             'description' => $description,
             'category_id' => $categoryId,
+            'quantity'    => $quantity,
             'status'      => $status,
         ];
         Flash::set('old', $oldData);
 
-        // --- Stap 2: Validatie ---
         $errors = [];
 
         if ($name === '') {
@@ -161,7 +161,10 @@ class ItemsController
             $errors[] = 'Categorie is verplicht.';
         }
 
-        // Status moet een geldige waarde zijn
+        if ($quantity < 1) {
+            $errors[] = 'Voorraad moet minimaal 1 zijn.';
+        }
+
         $validStatuses = ['available', 'maintenance', 'lost', 'retired'];
         if (!in_array($status, $validStatuses, true)) {
             $errors[] = 'Ongeldige status geselecteerd.';
@@ -263,11 +266,11 @@ class ItemsController
                 );
             }
 
-            // Item-record aanmaken met het (optionele) media-ID
             $this->itemsRepository->create(
                 $name,
                 $brand !== '' ? $brand : null,
                 $description,
+                $quantity,
                 $categoryId !== '' ? (int)$categoryId : null,
                 $status,
                 $mediaId
@@ -329,6 +332,7 @@ class ItemsController
                 'brand'       => $item['brand'] ?? '',
                 'description' => $item['description'],
                 'category_id' => $item['category_id'] ?? '',
+                'quantity'    => (int)($item['quantity'] ?? 1),
                 'status'      => $item['status'],
             ];
         }
@@ -368,24 +372,23 @@ class ItemsController
             exit;
         }
 
-        // --- Stap 1: POST-data ophalen en sanitizen ---
         $name        = trim((string)($_POST['name'] ?? ''));
         $brand       = trim((string)($_POST['brand'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
         $categoryId  = $_POST['category_id'] ?? '';
+        $quantity    = (int)($_POST['quantity'] ?? 1);
         $status      = trim((string)($_POST['status'] ?? 'available'));
 
-        // Oude invoer bewaren voor het geval de validatie faalt
         $oldData = [
             'name'        => $name,
             'brand'       => $brand,
             'description' => $description,
             'category_id' => $categoryId,
+            'quantity'    => $quantity,
             'status'      => $status,
         ];
         Flash::set('old', $oldData);
 
-        // --- Stap 2: Validatie ---
         $errors = [];
 
         if ($name === '') {
@@ -394,6 +397,10 @@ class ItemsController
 
         if ($categoryId === '' || $categoryId === null) {
             $errors[] = 'Categorie is verplicht.';
+        }
+
+        if ($quantity < 1) {
+            $errors[] = 'Voorraad moet minimaal 1 zijn.';
         }
 
         $validStatuses = ['available', 'maintenance', 'lost', 'retired'];
@@ -494,12 +501,12 @@ class ItemsController
                 );
             }
 
-            // Item bijwerken met (mogelijk nieuw) media-ID
             $this->itemsRepository->update(
                 $id,
                 $name,
                 $brand !== '' ? $brand : null,
                 $description,
+                $quantity,
                 $categoryId !== '' ? (int)$categoryId : null,
                 $status,
                 $mediaId

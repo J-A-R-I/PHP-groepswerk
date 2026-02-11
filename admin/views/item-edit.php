@@ -22,6 +22,7 @@ $old = $old ?? [
     'brand'       => '',
     'description' => '',
     'category_id' => '',
+    'quantity'    => 1,
     'status'      => 'available',
 ];
 
@@ -113,6 +114,19 @@ if (!empty($item['image_filename']) && !empty($item['image_path'])) {
                                       rows="4"
                                       placeholder="Beschrijf het item..."
                                       class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all duration-200 resize-none"><?= htmlspecialchars((string)$old['description']) ?></textarea>
+                        </div>
+
+                        <div>
+                            <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1.5">
+                                Voorraad <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number"
+                                   id="quantity"
+                                   name="quantity"
+                                   value="<?= (int)$old['quantity'] ?>"
+                                   min="1"
+                                   required
+                                   class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all duration-200">
                         </div>
 
                     </div>
