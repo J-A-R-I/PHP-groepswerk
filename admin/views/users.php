@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+$currentUserId = (int)($_SESSION['user_id'] ?? 0);
+
 /**
  * Gebruikers Overzicht View — ToolTrack Admin
  *
@@ -122,7 +124,15 @@ function getRoleBadgeClass(string $role): string {
                                     </a>
 
                                     <!-- Blokkeer / Deblokkeer knop -->
-                                    <?php if ((int)$user['is_active'] === 1): ?>
+                                    <?php if ((int)$user['id'] === $currentUserId): ?>
+                                        <span class="inline-flex items-center gap-1.5 rounded-lg border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-300 cursor-not-allowed select-none"
+                                              title="Je kunt jezelf niet blokkeren">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                            </svg>
+                                            Blokkeer
+                                        </span>
+                                    <?php elseif ((int)$user['is_active'] === 1): ?>
                                         <form method="POST" action="/admin/users/<?= (int)$user['id'] ?>/disable" 
                                               onsubmit="return confirm('Weet je zeker dat je <?= htmlspecialchars($user['name']) ?> wilt blokkeren?');">
                                             <button type="submit" 
